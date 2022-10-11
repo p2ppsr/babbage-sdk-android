@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">webview</string>
+    <string name="staging_hades">staging hades</string>
+    <string name="local_hades">local hades</string>
+    <string name="tutorial">tutorial</string>
+    <string name="authenticate">authenticate</string>
+    <string name="decrypt">decrypt</string>
+    <string name="encrypt">encrypt</string>
+    <string name="textView">The problem with the internet is that people don’t own their identities. This means a lack of privacy, perverse incentives and a bad user experience. Allowing people to once again own their identities in the digital world will enable a more trustworthy and value-centric web.</string>
+</resources>
