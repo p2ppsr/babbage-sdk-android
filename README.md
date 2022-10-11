@@ -14,7 +14,56 @@ To start creating apps with Babbage, you first need to install this package usin
 
 ### Using Android Studio
 
+![Screenshot from 2022-10-11 20-37-54](https://user-images.githubusercontent.com/27419107/195176212-8e751017-4d5f-4760-8139-53605d40dec3.png)
 
+Update your activity ```build.gradle``` file to include ```'com.babbage:sdk:0.0.9'``` as shown in the image above.
+
+Here is an example file:
+
+```Java
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.example.androidSDK"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.6.0-alpha01'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'org.chromium.net:cronet-embedded:98.4758.101'
+    implementation 'com.babbage:sdk:0.0.9'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+}
+```
 
 ## Example Usage
 
