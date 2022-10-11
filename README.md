@@ -6,7 +6,7 @@ Build Babbage Android apps in Android Studio
 
 This package provides a client-side authentication solution that will let your Android application access a few cryptographic keys that belong to your users. You can use these for client-side encryption/decryption, authentication, signing, or even creating Bitcoin transactions.
 
-See the Javascript repo for the full capabilities of building apps with Babbage: [@babbage/sdk](https://github.com/p2ppsr/babbage-sdk)
+See the JavaScript repo for the full capabilities of building apps with Babbage: [@babbage/sdk](https://github.com/p2ppsr/babbage-sdk)
 
 ## Installation
 
