@@ -14,6 +14,9 @@ To start creating apps with Babbage, you first need to install this package usin
 
 ### Using Android Studio
 
+![Screenshot from 2022-10-11 20-32-00](https://user-images.githubusercontent.com/27419107/195178274-4d5f524e-bb87-427a-8ddb-818891fc9138.png)
+
+
 ![Screenshot from 2022-10-11 20-37-54](https://user-images.githubusercontent.com/27419107/195176212-8e751017-4d5f-4760-8139-53605d40dec3.png)
 
 Update your activity ```build.gradle``` file to include ```'com.babbage:sdk:0.0.9'``` as shown in the image above.
