@@ -316,7 +316,6 @@ public class SDKActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    finish();
     callTypes = new CallTypes();
     setContentView(R.layout.activity_sdk);
     webview = findViewById(R.id.web_html);
@@ -340,11 +339,12 @@ public class SDKActivity extends AppCompatActivity {
           }
           String type = intent.getStringExtra("type");
           uuid = getIntent().getStringExtra("uuid");
-          if (type.equals("isAuthenticated")) {
-            runCommand(new IsAuthenticated(), uuid);
-          }
           if (type.equals("waitForAuthenticated")) {
             runCommand(new WaitForAuthenticated(), uuid);
+          }
+          finish();
+          if (type.equals("isAuthenticated")) {
+            runCommand(new IsAuthenticated(), uuid);
           }
           if (type.equals("encrypt")) {
             waitingCallType =
