@@ -67,7 +67,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 ```
-## Libray
+## Library
 
 The library modules are held locally in the ```.m2``` folder. You will need to create this directory in your ```home``` directory and point to in inside your IDE.
 
