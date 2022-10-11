@@ -21,11 +21,6 @@ To start creating apps with Babbage, you first need to install this package usin
 
 Update your activity ```build.gradle``` file to include ```'com.babbage:sdk:0.0.9'``` as shown in the image above.
 
-The library modules are held locally in the ```.m2``` folder. You will need to create this directory in your ```home``` directory and point to in inside your IDE.
-
-![Screenshot from 2022-10-11 22-20-30](https://user-images.githubusercontent.com/27419107/195190699-f0656f3a-f8f8-415d-ae5d-8c861b9d0be6.png)
-
-
 Here is an example file:
 
 ```Java
@@ -72,6 +67,11 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 ```
+## Libray
+
+The library modules are held locally in the ```.m2``` folder. You will need to create this directory in your ```home``` directory and point to in inside your IDE.
+
+![Screenshot from 2022-10-11 22-20-30](https://user-images.githubusercontent.com/27419107/195190699-f0656f3a-f8f8-415d-ae5d-8c861b9d0be6.png)
 
 ## Example Usage
 
