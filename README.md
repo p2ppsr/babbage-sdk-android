@@ -69,7 +69,7 @@ dependencies {
 ```
 ## Library
 
-The library modules are held locally in the ```.m2``` folder. You will need to create this directory in your ```home``` directory and point to in inside your IDE.
+The library modules are held locally in the ```.m2``` folder. You will need to create this directory in your ```home``` directory and point to it inside your IDE.
 
 Note: Latest sdk is <b>0.2.7</b>
 
