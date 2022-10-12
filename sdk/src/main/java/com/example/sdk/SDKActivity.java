@@ -1,6 +1,7 @@
 package com.example.sdk;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -17,6 +18,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Random;
 import java.util.Stack;
 
 import org.json.JSONException;
@@ -99,7 +101,7 @@ public class SDKActivity extends AppCompatActivity {
   public class IsAuthenticated extends CallBaseTypes {
 
     public String caller() {
-      return "{\"type\":\"CWI\",\"call\":\"isAuthenticated\",\"params\": [],\"id\":\"uuid\"}";
+      return "{\"type\":\"CWI\",\"call\":\"isAuthenticated\",\"params\":{},\"id\":\"uuid\"}";
     }
 
     public void called(String returnResult) {
@@ -129,7 +131,7 @@ public class SDKActivity extends AppCompatActivity {
   public class WaitForAuthenticated extends CallBaseTypes {
 
     public String caller() {
-      return "{\"type\":\"CWI\",\"call\":\"waitForAuthenticated\",\"params\": [],\"id\":\"uuid\"}";
+      return "{\"type\":\"CWI\",\"call\":\"waitForAuthenticated\",\"params\":{},\"id\":\"uuid\"}";
     }
 
     public void called(String returnResult) {
@@ -158,14 +160,6 @@ public class SDKActivity extends AppCompatActivity {
       this.protocolID = protocolID;
       this.keyID = keyID;
 
-      // Convert the string to base64 so it can be passed over the net
-      byte[] byteArray = plaintext.getBytes(StandardCharsets.UTF_8);
-      if (
-        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
-      ) {
-        base64Encoded =
-          Base64.getEncoder().encodeToString(byteArray).getBytes();
-      }
     }
 
     public String caller() {
@@ -247,6 +241,233 @@ public class SDKActivity extends AppCompatActivity {
     }
   }
 
+  /*
+  @available(iOS 15.0, *)
+  public func generateCryptoKey() async -> String {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"generateCryptoKey",
+          "params": []
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+
+      // Pull out the expect result string
+      let cryptoKey:String = (responseObject.objectValue?["result"]?.stringValue)!
+      return cryptoKey
+    }
+    */
+  public class GenerateCryptoKey extends CallBaseTypes {
+
+    public String caller() {
+      return "{\"type\":\"CWI\",\"call\":\"generateCryptoKey\",\"params\":{},\"id\":\"uuid\"}";
+    }
+
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_GEN_CRYPT", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "generateCryptoKey");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  /*
+  @available(iOS 15.0, *)
+  public func encryptUsingCryptoKey(plaintext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
+    // Construct the expected command to send
+    var cmd:JSON = [
+    "type":"CWI",
+      "call":"encryptUsingCryptoKey",
+      "params": [
+    "plaintext": convertToJSONString(param: plaintext),
+    "base64CryptoKey": convertToJSONString(param: base64CryptoKey),
+    "returnType": convertToJSONString(param: returnType ?? "base64")
+            ]
+        ]
+
+    // Run the command and get the response JSON object
+    let responseObject = await runCommand(cmd: &cmd).value
+
+    // Pull out the expect result string
+    // TODO: Support buffer return type
+    if (returnType == "base64") {
+      return (responseObject.objectValue?["result"]?.stringValue)!
+    }
+    return "Error: Unsupported type!"
+  }
+  */
+  public class EncryptUsingCryptoKey extends CallBaseTypes {
+
+    private String plaintext;
+    private String base64CryptoKey;
+    private String  returnType = "base64";
+
+    // Required for polymorphism
+    public EncryptUsingCryptoKey() {}
+
+    public EncryptUsingCryptoKey(String plaintext, String base64CryptoKey) {
+      this.plaintext = plaintext;
+      this.base64CryptoKey = base64CryptoKey;
+    }
+    public EncryptUsingCryptoKey(String plaintext, String base64CryptoKey, String returnType) {
+      this.plaintext = plaintext;
+      this.base64CryptoKey = base64CryptoKey;
+      this.returnType = returnType;
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"encryptUsingCryptoKey\",";
+      cmdJSONString += "\"params\":{";
+      cmdJSONString += "\"plaintext\":\"" + getBase64(plaintext) + "\",";
+      cmdJSONString += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
+      cmdJSONString += "\"returnType\":\"" + returnType + "\",";
+      cmdJSONString += "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CRYPT_KEY_ENCRYPT", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        String returnType = jsonReturnResultObject.get("returnType").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "encryptUsingCryptoKey");
+        intent.putExtra("uuid", uuid);
+        if (returnType.equals("base64")) {
+          intent.putExtra("result", result);
+        } else {
+          intent.putExtra("result","Error: Unsupported type!");
+        }
+        startActivity(intent);
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  /*
+  @available(iOS 15.0, *)
+  public func decryptUsingCryptoKey(ciphertext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
+    // Construct the expected command to send
+    var cmd:JSON = [
+    "type":"CWI",
+      "call":"decryptUsingCryptoKey",
+      "params": [
+    "ciphertext": convertToJSONString(param: ciphertext),
+    "base64CryptoKey": convertToJSONString(param: base64CryptoKey),
+    "returnType": convertToJSONString(param: returnType ?? "base64")
+            ]
+        ]
+
+    // Run the command and get the response JSON object
+    let responseObject = await runCommand(cmd: &cmd).value
+
+    // Pull out the expect result string
+    // TODO: Support buffer return type
+    if (returnType == "base64") {
+      return (responseObject.objectValue?["result"]?.stringValue)!
+    }
+    return "Error: Unsupported type!"
+  }
+  */
+  public class DecryptUsingCryptoKey extends CallBaseTypes {
+
+    private String ciphertext;
+    private String base64CryptoKey;
+    private String returnType = "base64";
+
+    // Required for polymorphism
+    public DecryptUsingCryptoKey() {}
+
+    public DecryptUsingCryptoKey(String ciphertext, String base64CryptoKey) {
+      this.ciphertext = ciphertext;
+      this.base64CryptoKey = base64CryptoKey;
+    }
+    public DecryptUsingCryptoKey(String ciphertext, String base64CryptoKey, String returnType) {
+      this.ciphertext = ciphertext;
+      this.base64CryptoKey = base64CryptoKey;
+      this.returnType = returnType;
+    }
+    public String caller() {
+      String cmdJSONString = "";
+      cmdJSONString += "{\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"decryptUsingCryptoKey\",";
+      cmdJSONString += "\"params\":{";
+      cmdJSONString += "\"ciphertext\":\"" + ciphertext + "\",";
+      cmdJSONString += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
+      cmdJSONString += "\"returnType\":\"" + returnType + "\",";
+      cmdJSONString += "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CRYPT_KEY_DECRYPT", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        String returnType = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "decryptUsingCryptoKey");
+        intent.putExtra("uuid", uuid);
+        if (returnType.equals("base64")) {
+          intent.putExtra("result", result);
+        } else {
+          intent.putExtra("result","Error: Unsupported type!");
+        }
+        startActivity(intent);
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  /*** Helper methods ***/
+
+  // TODO Additional functionality as per iOS version
+  /*
+  // Generates a secure random base64 string base on provided byte length
+  public func generateRandomBase64String(byteCount: Int) -> String {
+    var bytes = [UInt8](repeating: 0, count: byteCount)
+    let status = SecRandomCopyBytes(
+      kSecRandomDefault,
+      byteCount,
+      &bytes
+        )
+    // A status of errSecSuccess indicates success
+    if status != errSecSuccess {
+      return "Error"
+    }
+    let data = Data(bytes)
+    return data.base64EncodedString()
+  }
+  */
+  public static String generateRandomBase64String(int length) {
+    int byteLength = ((length + 3) / 4) * 3; // base 64: 3 bytes = 4 chars
+    byte[] byteVal = new byte[byteLength];
+    new Random(System.currentTimeMillis()).nextBytes(byteVal);
+
+    // Change '/' and '\' with '$' in case the string is used as file name
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      return new String(Base64.getEncoder().encode(byteVal), 0, length).replace('/', '$');
+    }
+    return "Error";
+  }
   public void doJavaScript(WebView webview, String javascript) {
     Log.i("WEBVIEW_JAVASCRIPT", "doJavaScript():javascript:" + javascript);
     webview.evaluateJavascript(javascript, null);
@@ -261,6 +482,17 @@ public class SDKActivity extends AppCompatActivity {
     );
   }
 
+  // Convert the string to base64 so it can be passed over the net
+  private String getBase64(String str) {
+    byte[] byteArray = str.getBytes(StandardCharsets.UTF_8);
+    if (
+      android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
+    ) {
+      return new String(Base64.getEncoder().encodeToString(byteArray).getBytes());
+    }
+    return "Error";
+  }
+
   // TODO (Not currently required) Helper to format complex JSON objects into an appropriate string
   public static String JSONFormatStr(String name, String key) {
     try {
@@ -269,7 +501,6 @@ public class SDKActivity extends AppCompatActivity {
       throw new RuntimeException(e);
     }
   }
-
   private static Object convertFromBytes(byte[] bytes)
     throws IOException, ClassNotFoundException {
     try (
