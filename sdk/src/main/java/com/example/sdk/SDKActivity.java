@@ -329,7 +329,7 @@ public class SDKActivity extends AppCompatActivity {
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"encryptUsingCryptoKey\",";
       cmdJSONString += "\"params\":{";
-      cmdJSONString += "\"plaintext\":\"" + getBase64(plaintext) + "\",";
+      cmdJSONString += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
       cmdJSONString += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
       cmdJSONString += "\"returnType\":\"" + returnType + "\",";
       cmdJSONString += "},";
@@ -437,7 +437,140 @@ public class SDKActivity extends AppCompatActivity {
     }
   }
 
+  /*
+    // Creates a new action using CWI.createAction
+    @available(iOS 15.0, *)
+    public func createAction(inputs: JSON? = nil, outputs: JSON, description: String, bridges: JSON? = nil, labels: JSON? = nil) async -> JSON {
+
+        let params:[String:JSON] = [
+            "inputs": inputs ?? nil,
+            "outputs": outputs,
+            "description": convertToJSONString(param: description),
+            "bridges": bridges ?? nil,
+            "labels": labels ?? nil
+        ]
+        let paramsAsJSON:JSON = getValidJSON(params: params)
+
+        // Construct the expected command to send
+        var cmd:JSON = [
+            "type":"CWI",
+            "call":"createAction",
+            "params": paramsAsJSON
+        ]
+
+        // Run the command and get the response JSON object
+        let responseObject = await runCommand(cmd: &cmd).value
+
+        return responseObject
+    }
+  */
+  public class CreateAction extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public CreateAction() {}
+
+    public CreateAction(String outputs, String description) {
+      paramStr = "";
+      paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+     }
+    public CreateAction(String inputs, String outputs, String description) {
+      paramStr = "";
+      paramStr += "\"inputs\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "inputs") + "\",";
+      paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+    }
+    public CreateAction(String inputs, String outputs, String description, String bridges) {
+      paramStr = "";
+      paramStr += "\"inputs\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "inputs") + "\",";
+      paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+      paramStr += "\"bridges\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "bridges") + "\"";
+    }
+    public CreateAction(String inputs, String outputs, String description, String bridges, String labels) {
+      paramStr = "";
+      paramStr += "\"inputs\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "inputs") + "\",";
+      paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+      paramStr += "\"bridges\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "bridges") + "\",";
+      paramStr += "\"labels\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "labels") + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"createAction\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CREATE_ACTION", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "createAction");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+
   /*** Helper methods ***/
+  private String checkForJSONErrorAndReturnToApp(String str, String type, String field) {
+    String resultStr = "";
+    try {
+      new JSONObject(str);
+      resultStr = str;
+    } catch (JSONException e) {
+      Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+      intent.putExtra("type", type);
+      intent.putExtra("uuid", uuid);
+      intent.putExtra("error", "invalid JSON");
+      intent.putExtra("field", field);
+      startActivity(intent);
+    }
+    return resultStr;
+  }
+  /*
+  // Returns a JSON object with non-null values
+  func getValidJSON(params: [String: JSON]) -> JSON {
+    var paramsAsJSON:JSON = []
+    for param in params {
+      if (param.value != nil) {
+        paramsAsJSON = paramsAsJSON.merging(with: [param.key: param.value])
+      }
+    }
+    return paramsAsJSON
+  }
+  // TODO Not needed as JSON has to be passed as strings by the App
+  private JSONObject getValidJSON(Stack<JSONObject> params) {
+    while(!params.isEmpty()) {
+      if (params.pop() != null) {
+        JSONFormatStr
+      }
+    }
+  }
+  // Helper function which returns a JSON type string
+  func convertToJSONString(param: String) -> JSON {
+    return try! JSON(param)
+  }
+  */
+  private JSONObject convertToJSONString(String param) {
+    try {
+      return new JSONObject(param);
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   // TODO Additional functionality as per iOS version
   /*
@@ -483,7 +616,7 @@ public class SDKActivity extends AppCompatActivity {
   }
 
   // Convert the string to base64 so it can be passed over the net
-  private String getBase64(String str) {
+  private String convertStringToBase64(String str) {
     byte[] byteArray = str.getBytes(StandardCharsets.UTF_8);
     if (
       android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
