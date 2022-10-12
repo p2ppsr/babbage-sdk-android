@@ -813,6 +813,112 @@ public class SDKActivity extends AppCompatActivity {
       }
     }
   }
+
+  /*
+  @available(iOS 15.0, *)
+  public func verifySignature(data: String, signature: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil, reason: String? = nil) async -> Bool{
+      // Make sure data and signature are base64 strings
+      var data = data
+      var signature = signature
+      if (!base64StringRegex.matches(data)) {
+          data = convertStringToBase64(data: data)
+      }
+      if (!base64StringRegex.matches(signature)) {
+          signature = convertStringToBase64(data: signature)
+      }
+
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"verifySignature",
+          "params": [
+              "data": convertToJSONString(param: data),
+              "signature": convertToJSONString(param: signature),
+              "protocolID": convertToJSONString(param: protocolID),
+              "keyID": convertToJSONString(param: keyID),
+              "description": try! JSON(description ?? ""),
+              "counterparty": try! JSON(counterparty ?? ""),
+              "privileged": try! JSON(privileged ?? false),
+              "reason": try! JSON(reason ?? "")
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+
+      // Pull out the expect result boolean
+      let verified:Bool = (responseObject.objectValue?["result"]?.boolValue)!
+      return verified
+  }
+  */
+  // public func verifySignature(data: String, signature: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil, reason: String? = nil) async -> Bool{
+  // Default values enforced by overloading constructor
+  public class VerifySignature extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public VerifySignature() {}
+
+    public VerifySignature(String data, String signature, String protocolID, String keyID) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
+      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
+    }
+    public VerifySignature(String data, String signature, String protocolID, String keyID, String description) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
+      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
+    }
+    public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
+      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifySignature", "counterparty") + "\"";
+    }
+    public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty, String privileged) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
+      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifySignature", "counterparty") + "\",";
+      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "verifySignature", "privileged") + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"verifySignature\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_VERIFY_HMAC", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "verifySignature");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"verifySignature", "result");
+      }
+    }
+  }
   /*** Helper methods ***/
   private String checkIsBase64(String str) {
     String returnStr = str;
