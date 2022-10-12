@@ -71,6 +71,8 @@ dependencies {
 
 The library modules are held locally in the ```.m2``` folder. You will need to create this directory in your ```home``` directory and point to in inside your IDE.
 
+Note: Latest sdk is <b>0.2.6</b>
+
 ![Screenshot from 2022-10-11 22-20-30](https://user-images.githubusercontent.com/27419107/195190699-f0656f3a-f8f8-415d-ae5d-8c861b9d0be6.png)
 
 ## Example Usage
