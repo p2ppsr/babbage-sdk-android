@@ -15,7 +15,6 @@ android {
 
         consumerProguardFiles "consumer-rules.pro"
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -23,13 +22,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 }
-
 dependencies {
-
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.6.1'
     testImplementation 'junit:junit:4.13.2'
@@ -43,7 +40,7 @@ afterEvaluate{
                 from components.release
                 groupId = 'com.babbage'
                 artifactId = 'sdk'
-                version = '0.0.9'
+                version = '0.2.6'
             }
         }
     }

@@ -17,6 +17,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Stack;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,7 +30,7 @@ public class SDKActivity extends AppCompatActivity {
   private Object classObject; // Used for Intent callback
   private WebView webview;
   private CallTypes callTypes = null; // Used as intermediate concrete class to give polymorphism
-  private CallBaseTypes waitingCallType = null; // Stores the waiting call type while authentication is performed
+  private Stack<CallBaseTypes> waitingCallType = new Stack<CallBaseTypes>(); // Stores the waiting call type while authentication is performed
   private Handler mainThreadHandler; // Needed to keep run commands calls in a queue
   private String uuid = ""; // Has to be available to run the queued run command
 
@@ -105,22 +107,21 @@ public class SDKActivity extends AppCompatActivity {
         Log.i("WEBVIEW_AUTH", "called():returnResult:" + returnResult);
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
-        String result = jsonReturnResultObject.get("result").toString();
+        String result = (String)jsonReturnResultObject.get("result").toString();
         if (result.equals("false")) {
-          /* TODO Should we call waitForAuthenticated() or return the boolean?
-          waitingCallType = new WaitForAuthenticated();
-          // Need to start the child thread to call waiting run command
-          WorkerThread workerThread = new WorkerThread();
-          workerThread.start();
-          */
+          Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+          intent.putExtra("result", result);
+          intent.putExtra("type", "isAuthenticated");
+          intent.putExtra("uuid", uuid);
+          startActivity(intent);
         }
-        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
-        intent.putExtra("type", "isAuthenticated");
-        intent.putExtra("uuid", uuid);
-        intent.putExtra("result", result);
-        startActivity(intent);
       } catch (JSONException e) {
         throw new RuntimeException(e);
+      }
+      if (!waitingCallType.isEmpty()) {
+        // Need to start the child thread to call the waiting run command
+        WorkerThread workerThread = new WorkerThread();
+        workerThread.start();
       }
     }
   }
@@ -132,20 +133,8 @@ public class SDKActivity extends AppCompatActivity {
     }
 
     public void called(String returnResult) {
-      Log.i("WEBVIEW_AUTHED", "called():returnResult:" + returnResult);
-      try {
-        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
-        uuid = jsonReturnResultObject.get("uuid").toString();
-        if (waitingCallType != null) {
-          // Need to start the child thread to call the waiting run command
-          WorkerThread workerThread = new WorkerThread();
-          workerThread.start();
-        } else {
-          finish();
-        }
-      } catch (JSONException e) {
-        throw new RuntimeException(e);
-      }
+      Log.i("WEBVIEW_AUTHED", "called()");
+      finish();
     }
   }
 
@@ -316,6 +305,11 @@ public class SDKActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    Intent intent = getIntent();
+    String type = intent.getStringExtra("type");
+    if (!type.equals("waitForAuthenticated")) {
+      finish();
+    }
     callTypes = new CallTypes();
     setContentView(R.layout.activity_sdk);
     webview = findViewById(R.id.web_html);
@@ -323,53 +317,53 @@ public class SDKActivity extends AppCompatActivity {
       new WebViewClient() {
         @Override
         public void onPageFinished(WebView view, String url) {
-          super.onPageFinished(view, url);
-          Intent intent = getIntent();
-          String callingClass = intent.getStringExtra("callingClass");
-          byte[] bytes = android.util.Base64.decode(
-            callingClass,
-            android.util.Base64.DEFAULT
+        super.onPageFinished(view, url);
+        uuid = intent.getStringExtra("uuid");
+        if (type.equals("isAuthenticated")) {
+          runCommand(new IsAuthenticated(), uuid);
+        }
+        if (type.equals("waitForAuthenticated")) {
+          runCommand(new WaitForAuthenticated(), uuid);
+        }
+        String callingClass = intent.getStringExtra("callingClass");
+        byte[] bytes = android.util.Base64.decode(
+          callingClass,
+          android.util.Base64.DEFAULT
+        );
+        try {
+          classObject = convertFromBytes(bytes);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+          throw new RuntimeException(e);
+        }
+        if (type.equals("encrypt")) {
+          waitingCallType.push(
+            new Encrypt(
+              intent.getStringExtra("plaintext"),
+              intent.getStringExtra("protocolID"),
+              intent.getStringExtra("keyID")
+            )
           );
-          try {
-            classObject = convertFromBytes(bytes);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-          }
-          String type = intent.getStringExtra("type");
-          uuid = getIntent().getStringExtra("uuid");
-          if (type.equals("waitForAuthenticated")) {
-            runCommand(new WaitForAuthenticated(), uuid);
-          }
-          finish();
-          if (type.equals("isAuthenticated")) {
-            runCommand(new IsAuthenticated(), uuid);
-          }
-          if (type.equals("encrypt")) {
-            waitingCallType =
-              new Encrypt(
-                intent.getStringExtra("plaintext"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID")
-              );
-            // Need to start the child thread to call waitForAuthenticated run command
-            WorkerThread workerThread = new WorkerThread();
-            workerThread.start();
-            runCommand(new WaitForAuthenticated(), uuid);
-          }
-          if (type.equals("decrypt")) {
-            waitingCallType =
-              new Decrypt(
-                intent.getStringExtra("ciphertext"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID")
-              );
-            // Need to start the child thread to call waitForAuthenticated run command
-            WorkerThread workerThread = new WorkerThread();
-            workerThread.start();
-            runCommand(new WaitForAuthenticated(), uuid);
-          }
+          waitingCallType.push(new IsAuthenticated());
+
+          // Need to start the child thread to call waitForAuthenticated run command
+          WorkerThread workerThread = new WorkerThread();
+          workerThread.start();
+        }
+        if (type.equals("decrypt")) {
+          waitingCallType.push(
+            new Decrypt(
+              intent.getStringExtra("ciphertext"),
+              intent.getStringExtra("protocolID"),
+              intent.getStringExtra("keyID")
+            )
+          );
+          waitingCallType.push(new IsAuthenticated());
+          // Need to start the child thread to call IsAuthenticated run command
+          WorkerThread workerThread = new WorkerThread();
+          workerThread.start();
+        }
         }
       }
     );
@@ -378,8 +372,7 @@ public class SDKActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
           if (msg.what == 1) {
-            // Update view component text, this is allowed.
-            runCommand(waitingCallType, uuid);
+            runCommand(waitingCallType.pop(), uuid);
           }
         }
       };
