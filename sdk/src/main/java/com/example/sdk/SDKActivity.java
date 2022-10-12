@@ -724,6 +724,95 @@ public class SDKActivity extends AppCompatActivity {
       }
     }
   }
+  /*
+  @available(iOS 15.0, *)
+  public func createSignature(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil) async -> String {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"createSignature",
+          "params": [
+              "data": convertToJSONString(param: convertStringToBase64(data: data)),
+              "protocolID": convertToJSONString(param: protocolID),
+              "keyID": convertToJSONString(param: keyID),
+              "description": try! JSON(description ?? ""),
+              "counterparty": try! JSON(counterparty ?? ""),
+              "privileged": try! JSON(privileged ?? false)
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+
+      // Pull out the expect result string
+      let signature:String = (responseObject.objectValue?["result"]?.stringValue)!
+      return signature
+  }
+  */
+  //   public func createSignature(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil) async -> String {
+  // Default values enforced by overloading constructor
+  public class CreateSignature extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public CreateSignature() {}
+
+    public CreateSignature(String data, String protocolID, String keyID) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\"";
+    }
+    public CreateSignature(String data, String protocolID, String keyID, String description) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createSignature", "description") + "\"";
+    }
+    public CreateSignature(String data, String protocolID, String keyID, String description, String counterparty) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createSignature", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createSignature", "counterparty") + "\"";
+    }
+    public CreateSignature(String data, String protocolID, String keyID, String description, String counterparty, String privileged) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createSignature", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createSignature", "counterparty") + "\",";
+      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "createSignature", "privileged") + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"createSignature\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CREATE_SIG", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "createSignature");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"createSignature", "result");
+      }
+    }
+  }
   /*** Helper methods ***/
   private String checkIsBase64(String str) {
     String returnStr = str;
