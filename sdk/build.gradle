@@ -40,7 +40,7 @@ afterEvaluate{
                 from components.release
                 groupId = 'com.babbage'
                 artifactId = 'sdk'
-                version = '0.2.6'
+                version = '0.2.7'
             }
         }
     }

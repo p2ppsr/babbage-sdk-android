@@ -135,6 +135,13 @@ public class SDKActivity extends AppCompatActivity {
     public void called(String returnResult) {
       Log.i("WEBVIEW_AUTHED", "called()");
       finish();
+
+      // Once authenticated the waiting command is processed
+      if (!waitingCallType.isEmpty()) {
+        // Need to start the child thread to call the waiting run command
+        WorkerThread workerThread = new WorkerThread();
+        workerThread.start();
+      }
     }
   }
 
