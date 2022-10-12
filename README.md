@@ -71,7 +71,7 @@ dependencies {
 
 The library modules are held locally in the ```.m2``` folder. You will need to create this directory in your ```home``` directory and point to in inside your IDE.
 
-Note: Latest sdk is <b>0.2.6</b>
+Note: Latest sdk is <b>0.2.7</b>
 
 ![Screenshot from 2022-10-11 22-20-30](https://user-images.githubusercontent.com/27419107/195190699-f0656f3a-f8f8-415d-ae5d-8c861b9d0be6.png)
 
@@ -111,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
 
 MainActivity1.java - calls the babbage sdk
 ```Java
+package com.example.androidSDK;
+
 import com.example.sdk.SDKActivity;
 import static com.example.sdk.SDKActivity.passActivity;
 import android.content.Intent;
@@ -123,6 +125,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.Serializable;
 import java.util.UUID;
+
+// TODO Sparse logging is left since we are adding additional commands in the future and to help
+// TODO team view what is happening on a physical device
 
 // Needs to be Serializable so we can pass over the class to the SDK
 public class MainActivity1 extends AppCompatActivity implements Serializable {
@@ -137,13 +142,24 @@ public class MainActivity1 extends AppCompatActivity implements Serializable {
     TextView textView = findViewById(R.id.textView);
     String result = getIntent().getStringExtra("result");
     Log.i("MAIN_ON_CREATE", "onCreate():result:" + result);
-    if (result != null) {
+    if (result != null && !result.equals("")) {
       String type = getIntent().getStringExtra("type");
       String uuid = getIntent().getStringExtra("uuid");
-      Log.i("MAIN_ON_CREATE", "onCreate():type:" + type + ",uuid:" + uuid);
+
+      // If not authenticated Babbage Desktop is displayed and user must register 
+      // for an account. Wait for authentication
+      if (type.equals("isAuthenticated")) {
+        if (result.equals("false")) {
+          Intent intent = new Intent(MainActivity1.this, SDKActivity.class);
+          intent.putExtra("callingClass", passActivity(new MainActivity1()));
+          intent.putExtra("type", "waitForAuthenticated");
+          intent.putExtra("uuid", UUID.randomUUID().toString());
+          startActivity(intent);
+        }
+      } 
       if (type.equals("encrypt")) {
         textView.setText(result);
-      }
+      } 
       if (type.equals("decrypt")) {
         textView.setText(result);
       }
