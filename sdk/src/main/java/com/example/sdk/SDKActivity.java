@@ -1,5 +1,9 @@
 package com.example.sdk;
 
+import static org.apache.commons.codec.binary.Base64.isBase64;
+import static android.util.Base64.DEFAULT;
+import static android.util.Base64.decode;
+
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -118,7 +122,7 @@ public class SDKActivity extends AppCompatActivity {
           startActivity(intent);
         }
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"isAuthenticated", "result");
       }
       if (!waitingCallType.isEmpty()) {
         // Need to start the child thread to call the waiting run command
@@ -189,7 +193,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"encrypt", "result");
       }
     }
   }
@@ -236,7 +240,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"decrypt", "result");
       }
     }
   }
@@ -277,7 +281,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"generateCryptoKey", "result");
       }
     }
   }
@@ -354,7 +358,7 @@ public class SDKActivity extends AppCompatActivity {
         }
         startActivity(intent);
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"encryptUsingCryptoKey", "result");
       }
     }
   }
@@ -432,7 +436,7 @@ public class SDKActivity extends AppCompatActivity {
         }
         startActivity(intent);
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"decryptUsingCryptoKey", "result");
       }
     }
   }
@@ -519,7 +523,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"createAction", "result");
       }
     }
   }
@@ -611,7 +615,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        throw new RuntimeException(e);
+        checkForJSONErrorAndReturnToApp(returnResult,"createHmac", "result");
       }
     }
   }
@@ -652,8 +656,83 @@ public class SDKActivity extends AppCompatActivity {
       return verified
   }
   */
+  // Default values enforced by overloading constructor
+  // public func verifyHmac(data: String, hmac: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: Bool? = nil) async -> Bool {
+  public class VerifyHmac extends CallBaseTypes {
 
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public VerifyHmac() {}
+
+    public VerifyHmac(String data, String hmac, String protocolID, String keyID) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
+      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
+    }
+    public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
+      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifyHmac", "description") + "\",";
+    }
+    public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description, String counterparty) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
+      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifyHmac", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifyHmac", "counterparty") + "\"";
+    }
+    public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description, String counterparty, String privileged) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
+      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifyHmac", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifyHmac", "counterparty") + "\",";
+      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "verifyHmac", "privileged") + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"verifyHmac\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_VERIFY_HMAC", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "verifyHmac");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"verifyHmac", "result");
+      }
+    }
+  }
   /*** Helper methods ***/
+  private String checkIsBase64(String str) {
+    String returnStr = str;
+    if (!isBase64(str)) {
+      returnStr = convertStringToBase64(str);
+    }
+    return returnStr;
+  }
+
   private String checkForJSONErrorAndReturnToApp(String str, String type, String field) {
     String resultStr = "";
     try {
@@ -826,9 +905,9 @@ public class SDKActivity extends AppCompatActivity {
           runCommand(new WaitForAuthenticated(), uuid);
         }
         String callingClass = intent.getStringExtra("callingClass");
-        byte[] bytes = android.util.Base64.decode(
+        byte[] bytes = decode(
           callingClass,
-          android.util.Base64.DEFAULT
+          DEFAULT
         );
         try {
           classObject = convertFromBytes(bytes);
