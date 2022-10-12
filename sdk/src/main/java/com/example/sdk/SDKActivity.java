@@ -471,6 +471,7 @@ public class SDKActivity extends AppCompatActivity {
     // Required for polymorphism
     public CreateAction() {}
 
+    // Default values enforced by overloading constructor
     public CreateAction(String outputs, String description) {
       paramStr = "";
       paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
@@ -523,6 +524,134 @@ public class SDKActivity extends AppCompatActivity {
     }
   }
 
+    /*
+  // Creates an Hmac using CWI.createHmac
+  @available(iOS 15.0, *)
+  public func createHmac(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = "self", privileged: Bool? = nil) async -> String {
+      // Construct the expected command to send with default values for nil params
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"createHmac",
+          "params": [
+              "data": convertToJSONString(param: convertStringToBase64(data: data)),
+              "protocolID": convertToJSONString(param: protocolID),
+              "keyID": convertToJSONString(param: keyID),
+              "description": try! JSON(description ?? ""),
+              "counterparty": try! JSON(counterparty ?? ""),
+              "privileged": try! JSON(privileged ?? false)
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+
+      // Pull out the expect result string
+      let decryptedText:String = (responseObject.objectValue?["result"]?.stringValue)!
+      return decryptedText
+  }
+  */
+  // Default values enforced by overloading constructor
+  public class CreateHmac extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public CreateHmac() {}
+
+    public CreateHmac(String data, String protocolID, String keyID) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
+      paramStr += "\"counterparty\":\"self\"";
+    }
+    public CreateHmac(String data, String protocolID, String keyID, String description) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createHmac", "description") + "\",";
+      paramStr += "\"counterparty\":\"self\"";
+    }
+    public CreateHmac(String data, String protocolID, String keyID, String description, String counterparty) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createHmac", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createHmac", "counterparty") + "\"";
+    }
+    public CreateHmac(String data, String protocolID, String keyID, String description, String counterparty, String privileged) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createHmac", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createHmac", "counterparty") + "\",";
+      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "createHmac", "privileged") + "\"";
+   }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"createHmac\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CREATE_HMAC", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "createHmac");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  /*
+  @available(iOS 15.0, *)
+  public func verifyHmac(data: String, hmac: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: Bool? = nil) async -> Bool {
+      // Make sure data and hmac are base64 strings
+      var data = data
+      var hmac = hmac
+      if (!base64StringRegex.matches(hmac)) {
+          hmac = convertStringToBase64(data: hmac)
+      }
+      if (!base64StringRegex.matches(data)) {
+          data = convertStringToBase64(data: data)
+      }
+
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"verifyHmac",
+          "params": [
+              "data": convertToJSONString(param: data),
+              "hmac": convertToJSONString(param: hmac),
+              "protocolID": convertToJSONString(param: protocolID),
+              "keyID": convertToJSONString(param: keyID),
+              "description": try! JSON(description ?? ""),
+              "counterparty": try! JSON(counterparty ?? ""),
+              "privileged": try! JSON(privileged ?? false)
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+
+      // Pull out the expect result boolean
+      let verified:Bool = (responseObject.objectValue?["result"]?.boolValue)!
+      return verified
+  }
+  */
 
   /*** Helper methods ***/
   private String checkForJSONErrorAndReturnToApp(String str, String type, String field) {
