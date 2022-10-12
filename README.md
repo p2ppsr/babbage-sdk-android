@@ -113,8 +113,8 @@ MainActivity1.java - calls the babbage sdk
 ```Java
 package com.example.androidSDK;
 
-import com.example.sdk.SDKActivity;
 import static com.example.sdk.SDKActivity.passActivity;
+
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -123,6 +123,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.sdk.SDKActivity;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -142,11 +143,11 @@ public class MainActivity1 extends AppCompatActivity implements Serializable {
     TextView textView = findViewById(R.id.textView);
     String result = getIntent().getStringExtra("result");
     Log.i("MAIN_ON_CREATE", "onCreate():result:" + result);
-    if (result != null && !result.equals("")) {
+    if (result != null) {
       String type = getIntent().getStringExtra("type");
       String uuid = getIntent().getStringExtra("uuid");
 
-      // If not authenticated Babbage Desktop is displayed and user must register 
+      // If not authenticated Babbage Desktop is displayed and user must register
       // for an account. Wait for authentication
       if (type.equals("isAuthenticated")) {
         if (result.equals("false")) {
@@ -156,10 +157,10 @@ public class MainActivity1 extends AppCompatActivity implements Serializable {
           intent.putExtra("uuid", UUID.randomUUID().toString());
           startActivity(intent);
         }
-      } 
+      }
       if (type.equals("encrypt")) {
         textView.setText(result);
-      } 
+      }
       if (type.equals("decrypt")) {
         textView.setText(result);
       }
@@ -184,7 +185,7 @@ public class MainActivity1 extends AppCompatActivity implements Serializable {
         intent.putExtra("callingClass", passActivity(new MainActivity1()));
         intent.putExtra("type", "decrypt");
         intent.putExtra("uuid", UUID.randomUUID().toString());
-        intent.putExtra("ciphertext",(String)textView.getText());
+        intent.putExtra("ciphertext", (String) textView.getText());
         String PROTOCOL_ID = "crypton";
         String KEY_ID = "1";
         intent.putExtra("protocolID", PROTOCOL_ID);
