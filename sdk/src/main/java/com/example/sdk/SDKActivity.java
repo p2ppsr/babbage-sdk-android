@@ -1477,6 +1477,44 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func downloadUHRPFile(URL: String, bridgeportResolvers: JSON) async -> Data? {
+  public class DownloadUHRPFile extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public DownloadUHRPFile() {}
+
+    // Default values enforced by overloading constructor
+    public DownloadUHRPFile(String URL, String bridgeportResolvers) {
+      paramStr = "";
+      paramStr += "\"URL\":\"" + URL + "\"";
+      paramStr += "\"bridgeportResolvers\":\"" + checkForJSONErrorAndReturnToApp(bridgeportResolvers, "downloadUHRPFile", "bridgeportResolvers") + "\",";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"downloadUHRPFile\",";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_PARA_REQUEST", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "downloadUHRPFile");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"downloadUHRPFile", "result");
+      }
+    }
+  }
 
   /*
   @available(iOS 15.0, *)
@@ -1497,7 +1535,47 @@ public class SDKActivity extends AppCompatActivity {
       let result = await runCommand(cmd: &cmd).value
       return result
   }
+  */
+  // public func newAuthriteRequest(params: JSON, requestUrl: String, fetchConfig: JSON) async -> JSON {
+  public class NewAuthriteRequest extends CallBaseTypes {
 
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public NewAuthriteRequest() {}
+
+    public NewAuthriteRequest(String params, String requestUrl, String fetchConfig) {
+      paramStr = "";
+      paramStr += "\"params\":\"" + checkForJSONErrorAndReturnToApp(params, "newAuthriteRequest", "params") + "\",";
+      paramStr += "\"requestUrl\":\"" + requestUrl + "\"";
+      paramStr += "\"fetchConfig\":\"" + checkForJSONErrorAndReturnToApp(fetchConfig, "newAuthriteRequest", "fetchConfig") + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"newAuthriteRequest\",";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_NEW_AUTHRITE", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "newAuthriteRequest");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"newAuthriteRequest", "result");
+      }
+    }
+  }
+  /*
   @available(iOS 15.0, *)
   public func createOutputScriptFromPubKey(derivedPublicKey: String) async -> String {
       // Construct the expected command to send
@@ -1514,6 +1592,42 @@ public class SDKActivity extends AppCompatActivity {
       return (responseObject.objectValue?["result"]?.stringValue)!
   }
   */
+  // public func createOutputScriptFromPubKey(derivedPublicKey: String) async -> String {
+  public class CreateOutputScriptFromPubKey extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public CreateOutputScriptFromPubKey() {}
+
+    public CreateOutputScriptFromPubKey(String derivedPublicKey) {
+      paramStr = "\"derivedPublicKey\":\"" + derivedPublicKey + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"createOutputScriptFromPubKey\",";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CREATE_OUTPUT_SCRIPT", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "createOutputScriptFromPubKey");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"createOutputScriptFromPubKey", "result");
+      }
+    }
+  }
   /*** Helper methods ***/
   private String checkIsBase64(String str) {
     String returnStr = str;
