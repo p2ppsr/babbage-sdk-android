@@ -894,6 +894,17 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifySignature", "counterparty") + "\",";
       paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "verifySignature", "privileged") + "\"";
     }
+    public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty, String privileged, String reason) {
+      paramStr = "";
+      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
+      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
+      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifySignature", "counterparty") + "\",";
+      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "verifySignature", "privileged") + "\",";
+      paramStr += "\"reason\":\"" + checkForJSONErrorAndReturnToApp(reason, "verifySignature", "reason") + "\"";
+    }
     public String caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
@@ -919,6 +930,192 @@ public class SDKActivity extends AppCompatActivity {
       }
     }
   }
+  /*
+  @available(iOS 15.0, *)
+  public func createCertificate(certificateType: String, fieldObject: JSON, certifierUrl: String, certifierPublicKey: String) async -> JSON {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"createCertificate",
+          "params": [
+              "certificateType": convertToJSONString(param: certificateType),
+              "fieldObject": fieldObject,
+              "certifierUrl": convertToJSONString(param: certifierUrl),
+              "certifierPublicKey": convertToJSONString(param: certifierPublicKey)
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let signedCertificate = await runCommand(cmd: &cmd).value
+      return signedCertificate
+  }
+  */
+  // public func createCertificate(certificateType: String, fieldObject: JSON, certifierUrl: String, certifierPublicKey: String) async -> JSON {
+  // Default values enforced by overloading constructor
+  public class CreateCertificate extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public CreateCertificate() {}
+
+    public CreateCertificate(String certificateType, String fieldObject, String certifierUrl, String certifierPublicKey) {
+      paramStr = "";
+      paramStr += "\"certificateType\":\"" + checkForJSONErrorAndReturnToApp(certificateType, "createCertificate", "certificateType") + "\",";
+      paramStr += "\"fieldObject\":\"" + checkForJSONErrorAndReturnToApp(fieldObject, "createCertificate", "fieldObject") + "\",";
+      paramStr += "\"certifierUrl\":\"" + checkForJSONErrorAndReturnToApp(certifierUrl, "createCertificate", "certifierUrl") + "\",";
+      paramStr += "\"certifierPublicKey\":\"" + checkForJSONErrorAndReturnToApp(certifierPublicKey, "createCertificate", "certifierPublicKey") + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"createCertificate\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CREATE_CERT", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "createCertificate");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"createCertificate", "result");
+      }
+    }
+  }
+  /*
+  @available(iOS 15.0, *)
+  public func getCertificates(certifiers: JSON, types: JSON) async -> JSON {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"ninja.findCertificates",
+          "params": [
+              "certifiers": certifiers,
+              "types": types
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let certificates = await runCommand(cmd: &cmd).value
+      return certificates
+  }
+  */
+
+  // public func getCertificates(certifiers: JSON, types: JSON) async -> JSON {
+  // Default values enforced by overloading constructor
+  public class GetCertificates extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public GetCertificates() {}
+
+    public GetCertificates(String certifiers, String types) {
+      paramStr = "";
+      paramStr += "\"certifiers\":\"" + checkForJSONErrorAndReturnToApp(certifiers, "ninja.findCertificates", "certifiers") + "\",";
+      paramStr += "\"types\":\"" + checkForJSONErrorAndReturnToApp(types, "ninja.findCertificates", "types") + "\",";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"ninja.findCertificates\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_GET_CERTS", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "ninja.findCertificates");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"ninja.findCertificates", "result");
+      }
+    }
+  }
+  /*
+  @available(iOS 15.0, *)
+  public func proveCertificate(certificate: JSON, fieldsToReveal: JSON? = nil, verifierPublicIdentityKey: String) async -> JSON {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"proveCertificate",
+          "params": [
+              "certificate": certificate,
+              "fieldsToReveal": fieldsToReveal ?? nil,
+              "verifierPublicIdentityKey": convertToJSONString(param: verifierPublicIdentityKey)
+          ]
+      ]
+
+
+      // Run the command and get the response JSON object
+      let provableCertificate = await runCommand(cmd: &cmd).value
+      return provableCertificate
+  }
+  */
+  // public func proveCertificate(certificate: JSON, fieldsToReveal: JSON? = nil, verifierPublicIdentityKey: String) async -> JSON {
+  // Default values enforced by overloading constructor
+  public class ProveCertificate extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public ProveCertificate() {}
+
+    public ProveCertificate(String certificate, String verifierPublicIdentityKey) {
+      paramStr = "";
+      paramStr += "\"certificate\":\"" + checkForJSONErrorAndReturnToApp(certificate, "proveCertificate", "certificate") + "\",";
+      paramStr += "\"verifierPublicIdentityKey\":\"" + checkForJSONErrorAndReturnToApp(verifierPublicIdentityKey, "proveCertificate", "verifierPublicIdentityKey") + "\",";
+    }
+    public ProveCertificate(String certificate, String fieldsToReveal, String verifierPublicIdentityKey) {
+      paramStr = "";
+      paramStr += "\"certificate\":\"" + checkForJSONErrorAndReturnToApp(certificate, "proveCertificate", "certificate") + "\",";
+      paramStr += "\"fieldsToReveal\":\"" + checkForJSONErrorAndReturnToApp(fieldsToReveal, "proveCertificate", "fieldsToReveal") + "\",";
+      paramStr += "\"verifierPublicIdentityKey\":\"" + checkForJSONErrorAndReturnToApp(verifierPublicIdentityKey, "proveCertificate", "verifierPublicIdentityKey") + "\",";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"proveCertificate\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_PROVE_CERT", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "proveCertificate");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"proveCertificate", "result");
+      }
+    }
+  }
+
+
   /*** Helper methods ***/
   private String checkIsBase64(String str) {
     String returnStr = str;
