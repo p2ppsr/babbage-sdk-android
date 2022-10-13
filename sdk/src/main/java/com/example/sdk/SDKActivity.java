@@ -512,7 +512,7 @@ public class SDKActivity extends AppCompatActivity {
     }
   }
 
-    /*
+  /*
   // Creates an Hmac using CWI.createHmac
   @available(iOS 15.0, *)
   public func createHmac(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = "self", privileged: Bool? = nil) async -> String {
@@ -1801,53 +1801,235 @@ public class SDKActivity extends AppCompatActivity {
       new WebViewClient() {
         @Override
         public void onPageFinished(WebView view, String url) {
-        super.onPageFinished(view, url);
-        uuid = intent.getStringExtra("uuid");
-        if (type.equals("isAuthenticated")) {
-          runCommand(new IsAuthenticated(), uuid);
-        }
-        if (type.equals("waitForAuthenticated")) {
-          runCommand(new WaitForAuthenticated(), uuid);
-        }
-        String callingClass = intent.getStringExtra("callingClass");
-        byte[] bytes = decode(
-          callingClass,
-          DEFAULT
-        );
-        try {
-          classObject = convertFromBytes(bytes);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-          throw new RuntimeException(e);
-        }
-        if (type.equals("encrypt")) {
-          waitingCallType.push(
-            new Encrypt(
-              intent.getStringExtra("plaintext"),
-              intent.getStringExtra("protocolID"),
-              intent.getStringExtra("keyID")
-            )
+          super.onPageFinished(view, url);
+          uuid = intent.getStringExtra("uuid");
+          if (type.equals("isAuthenticated")) {
+            runCommand(new IsAuthenticated(), uuid);
+          }
+          if (type.equals("waitForAuthenticated")) {
+            runCommand(new WaitForAuthenticated(), uuid);
+          }
+          String callingClass = intent.getStringExtra("callingClass");
+          byte[] bytes = decode(
+            callingClass,
+            DEFAULT
           );
-          waitingCallType.push(new IsAuthenticated());
+          try {
+            classObject = convertFromBytes(bytes);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+          }
+          if (type.equals("encrypt")) {
+            waitingCallType.push(
+              new Encrypt(
+                intent.getStringExtra("plaintext"),
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID")
+              )
+            );
+            waitingCallType.push(new IsAuthenticated());
 
-          // Need to start the child thread to call waitForAuthenticated run command
-          WorkerThread workerThread = new WorkerThread();
-          workerThread.start();
-        }
-        if (type.equals("decrypt")) {
-          waitingCallType.push(
-            new Decrypt(
-              intent.getStringExtra("ciphertext"),
-              intent.getStringExtra("protocolID"),
-              intent.getStringExtra("keyID")
-            )
-          );
-          waitingCallType.push(new IsAuthenticated());
+            // Need to start the child thread to call waitForAuthenticated run command
+            WorkerThread workerThread = new WorkerThread();
+            workerThread.start();
+          }
+          if (type.equals("decrypt")) {
+            waitingCallType.push(
+              new Decrypt(
+                intent.getStringExtra("ciphertext"),
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID")
+              )
+            );
+            waitingCallType.push(new IsAuthenticated());
+            // Need to start the child thread to call IsAuthenticated run command
+          }
+          if (type.equals("generateCryptoKey")) {
+            waitingCallType.push(new GenerateCryptoKey());
+          }
+          if (type.equals("encryptUsingCryptoKey")) {
+            waitingCallType.push(
+              new EncryptUsingCryptoKey(
+                intent.getStringExtra("plaintext"),
+                intent.getStringExtra("base64CryptoKey"),
+                intent.getStringExtra("returnType")
+              )
+            );
+          }
+          if (type.equals("decryptUsingCryptoKey")) {
+            waitingCallType.push(
+              new DecryptUsingCryptoKey(
+                intent.getStringExtra("ciphertext"),
+                intent.getStringExtra("base64CryptoKey"),
+                intent.getStringExtra("returnType")
+              )
+            );
+          }
+          if (type.equals("createAction")) {
+            waitingCallType.push(
+              new CreateAction(
+                intent.getStringExtra("inputs"),
+                intent.getStringExtra("outputs"),
+                intent.getStringExtra("description"),
+                intent.getStringExtra("bridges"),
+                intent.getStringExtra("labels")
+              )
+            );
+          }
+          if (type.equals("createHmac")) {
+            waitingCallType.push(
+              new CreateHmac(
+                intent.getStringExtra("data"),
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID"),
+                intent.getStringExtra("description"),
+                intent.getStringExtra("counterparty"),
+                intent.getStringExtra("privileged")
+              )
+            );
+          }
+          if (type.equals("verifyHmac")) {
+            waitingCallType.push(
+              new VerifyHmac(
+                intent.getStringExtra("data"),
+                intent.getStringExtra("hmac"),
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID"),
+                intent.getStringExtra("description"),
+                intent.getStringExtra("counterparty"),
+                intent.getStringExtra("privileged")
+                )
+            );
+          }
+          if (type.equals("createSignature")) {
+            waitingCallType.push(
+              new CreateSignature(
+                intent.getStringExtra("data"),
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID"),
+                intent.getStringExtra("description"),
+                intent.getStringExtra("counterparty"),
+                intent.getStringExtra("privileged")
+              )
+            );
+          }
+          if (type.equals("verifySignature")) {
+            waitingCallType.push(
+              new VerifySignature(
+                intent.getStringExtra("data"),
+                intent.getStringExtra("signature"),
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID"),
+                intent.getStringExtra("description"),
+                intent.getStringExtra("counterparty"),
+                intent.getStringExtra("privileged"),
+                intent.getStringExtra("reason")
+              )
+            );
+          }
+          if (type.equals("createCertificate")) {
+            waitingCallType.push(
+              new CreateCertificate(
+                intent.getStringExtra("certificateType"),
+                intent.getStringExtra("fieldObject"),
+                intent.getStringExtra("certifierUrl"),
+                intent.getStringExtra("certifierPublicKey")
+              )
+            );
+          }
+          if (type.equals("getCertificates")) {
+            waitingCallType.push(
+              new GetCertificates(
+                intent.getStringExtra("certifiers"),
+                intent.getStringExtra("types")
+               )
+            );
+          }
+          if (type.equals("proveCertificate")) {
+            waitingCallType.push(
+              new ProveCertificate(
+                intent.getStringExtra("certificate"),
+                intent.getStringExtra("fieldsToReveal"),
+                intent.getStringExtra("verifierPublicIdentityKey")
+              )
+            );
+          }
+          if (type.equals("submitDirectTransaction")) {
+            waitingCallType.push(
+              new SubmitDirectTransaction(
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("transaction"),
+                intent.getStringExtra("senderIdentityKey"),
+                intent.getStringExtra("note"),
+                intent.getStringExtra("amount"),
+                intent.getStringExtra("derivationPrefix")
+            );
+          }
+          if (type.equals("getPublicKey")) {
+            waitingCallType.push(
+              new GetPublicKey(
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID"),
+                intent.getStringExtra("privileged"),
+                intent.getStringExtra("identityKey"),
+                intent.getStringExtra("reason"),
+                intent.getStringExtra("counterparty"),
+                intent.getStringExtra("description")
+              )
+            );
+          }
+          if (type.equals("getVersion")) {
+            waitingCallType.push(new GetVersion());
+          }
+          if (type.equals("createPushDropScript")) {
+            waitingCallType.push(
+              new CreatePushDropScript(
+                intent.getStringExtra("fields"),
+                intent.getStringExtra("protocolID"),
+                intent.getStringExtra("keyID")
+              )
+            );
+          }
+          if (type.equals("parapetRequest")) {
+            waitingCallType.push(
+              new ParapetRequest(
+                intent.getStringExtra("resolvers"),
+                intent.getStringExtra("bridge"),
+                intent.getStringExtra("type"),
+                intent.getStringExtra("query")
+              )
+            );
+          }
+          if (type.equals("downloadUHRPFile")) {
+            waitingCallType.push(
+              new DownloadUHRPFile(
+                intent.getStringExtra("URL"),
+                intent.getStringExtra("bridgeportResolvers")
+              )
+            );
+          }
+          if (type.equals("newAuthriteRequest")) {
+            waitingCallType.push(
+              new NewAuthriteRequest(
+                intent.getStringExtra("params"),
+                intent.getStringExtra("requestUrl"),
+                intent.getStringExtra("fetchConfig")
+              )
+            );
+          }
+          if (type.equals("createOutputScriptFromPubKey")) {
+            waitingCallType.push(
+              new CreateOutputScriptFromPubKey(
+                intent.getStringExtra("derivedPublicKey")
+              )
+            );
+          }
+
           // Need to start the child thread to call IsAuthenticated run command
           WorkerThread workerThread = new WorkerThread();
           workerThread.start();
-        }
         }
       }
     );
