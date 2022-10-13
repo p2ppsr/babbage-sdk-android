@@ -153,29 +153,23 @@ public class SDKActivity extends AppCompatActivity {
 
   public class Encrypt extends CallBaseTypes {
 
-    private byte[] base64Encoded;
-    private String protocolID;
-    private String keyID;
+    private String paramStr = "";
 
     // Required for polymorphism
     public Encrypt() {}
 
     public Encrypt(String plaintext, String protocolID, String keyID) {
-      this.protocolID = protocolID;
-      this.keyID = keyID;
-
+      paramStr = "";
+      paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
     }
 
     public String caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"encrypt\",";
-      cmdJSONString += "\"params\":{";
-      cmdJSONString += "\"plaintext\":\"" + new String(base64Encoded) + "\",";
-      cmdJSONString += "\"protocolID\":\"" + protocolID + "\",";
-      cmdJSONString += "\"keyID\":\"" + keyID + "\",";
-      cmdJSONString += "\"returnType\":\"string\"";
-      cmdJSONString += "},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -200,29 +194,23 @@ public class SDKActivity extends AppCompatActivity {
 
   public class Decrypt extends CallBaseTypes {
 
-    private String ciphertext;
-    private String protocolID;
-    private String keyID;
+    private String paramStr;
 
     // Required for polymorphism
     public Decrypt() {}
 
     public Decrypt(String ciphertext, String protocolID, String keyID) {
-      this.ciphertext = ciphertext;
-      this.protocolID = protocolID;
-      this.keyID = keyID;
+      paramStr = "";
+      paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
     }
 
     public String caller() {
       String cmdJSONString = "";
       cmdJSONString += "{\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"decrypt\",";
-      cmdJSONString += "\"params\":{";
-      cmdJSONString += "\"ciphertext\":\"" + ciphertext + "\",";
-      cmdJSONString += "\"protocolID\":\"" + protocolID + "\",";
-      cmdJSONString += "\"keyID\":\"" + keyID + "\",";
-      cmdJSONString += "\"returnType\":\"string\"";
-      cmdJSONString += "},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -248,21 +236,21 @@ public class SDKActivity extends AppCompatActivity {
   /*
   @available(iOS 15.0, *)
   public func generateCryptoKey() async -> String {
-      // Construct the expected command to send
-      var cmd:JSON = [
-          "type":"CWI",
-          "call":"generateCryptoKey",
-          "params": []
-      ]
+    // Construct the expected command to send
+    var cmd:JSON = [
+        "type":"CWI",
+        "call":"generateCryptoKey",
+        "params": []
+    ]
 
-      // Run the command and get the response JSON object
-      let responseObject = await runCommand(cmd: &cmd).value
+    // Run the command and get the response JSON object
+    let responseObject = await runCommand(cmd: &cmd).value
 
-      // Pull out the expect result string
-      let cryptoKey:String = (responseObject.objectValue?["result"]?.stringValue)!
-      return cryptoKey
-    }
-    */
+    // Pull out the expect result string
+    let cryptoKey:String = (responseObject.objectValue?["result"]?.stringValue)!
+    return cryptoKey
+  }
+  */
   public class GenerateCryptoKey extends CallBaseTypes {
 
     public String caller() {
@@ -312,30 +300,28 @@ public class SDKActivity extends AppCompatActivity {
   */
   public class EncryptUsingCryptoKey extends CallBaseTypes {
 
-    private String plaintext;
-    private String base64CryptoKey;
-    private String  returnType = "base64";
-
+    private String paramStr;
+    
     // Required for polymorphism
     public EncryptUsingCryptoKey() {}
 
     public EncryptUsingCryptoKey(String plaintext, String base64CryptoKey) {
-      this.plaintext = plaintext;
-      this.base64CryptoKey = base64CryptoKey;
+      paramStr = "";
+      paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
+      paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
+      paramStr += "\"returnType\":\"base64\"";
     }
     public EncryptUsingCryptoKey(String plaintext, String base64CryptoKey, String returnType) {
-      this.plaintext = plaintext;
-      this.base64CryptoKey = base64CryptoKey;
-      this.returnType = returnType;
+      paramStr = "";
+      paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
+      paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
+      paramStr += "\"returnType\":\"" + returnType + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"encryptUsingCryptoKey\",";
-      cmdJSONString += "\"params\":{";
-      cmdJSONString += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
-      cmdJSONString += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
-      cmdJSONString += "\"returnType\":\"" + returnType + "\",";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
@@ -351,7 +337,7 @@ public class SDKActivity extends AppCompatActivity {
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
         intent.putExtra("type", "encryptUsingCryptoKey");
         intent.putExtra("uuid", uuid);
-        if (returnType.equals("base64")) {
+        if (!returnType.equals("base64")) {
           intent.putExtra("result", result);
         } else {
           intent.putExtra("result","Error: Unsupported type!");
@@ -388,33 +374,30 @@ public class SDKActivity extends AppCompatActivity {
     return "Error: Unsupported type!"
   }
   */
+  // public func decryptUsingCryptoKey(ciphertext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
   public class DecryptUsingCryptoKey extends CallBaseTypes {
 
-    private String ciphertext;
-    private String base64CryptoKey;
-    private String returnType = "base64";
+    private String paramStr = "";
 
     // Required for polymorphism
     public DecryptUsingCryptoKey() {}
 
     public DecryptUsingCryptoKey(String ciphertext, String base64CryptoKey) {
-      this.ciphertext = ciphertext;
-      this.base64CryptoKey = base64CryptoKey;
+      paramStr = "";
+      paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
+      paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
+      paramStr += "\"returnType\":\"base64\"";
     }
     public DecryptUsingCryptoKey(String ciphertext, String base64CryptoKey, String returnType) {
-      this.ciphertext = ciphertext;
-      this.base64CryptoKey = base64CryptoKey;
-      this.returnType = returnType;
+      paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
+      paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
+      paramStr += "\"returnType\":\"" + returnType + "\"";
     }
     public String caller() {
       String cmdJSONString = "";
       cmdJSONString += "{\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"decryptUsingCryptoKey\",";
-      cmdJSONString += "\"params\":{";
-      cmdJSONString += "\"ciphertext\":\"" + ciphertext + "\",";
-      cmdJSONString += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
-      cmdJSONString += "\"returnType\":\"" + returnType + "\",";
-      cmdJSONString += "},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -468,6 +451,7 @@ public class SDKActivity extends AppCompatActivity {
         return responseObject
     }
   */
+  // public func createAction(inputs: JSON? = nil, outputs: JSON, description: String, bridges: JSON? = nil, labels: JSON? = nil) async -> JSON {
   public class CreateAction extends CallBaseTypes {
 
     private String paramStr = "";
@@ -479,26 +463,26 @@ public class SDKActivity extends AppCompatActivity {
     public CreateAction(String outputs, String description) {
       paramStr = "";
       paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+      paramStr += "\"description\":\"" + description + "\"";
      }
     public CreateAction(String inputs, String outputs, String description) {
       paramStr = "";
       paramStr += "\"inputs\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "inputs") + "\",";
       paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+      paramStr += "\"description\":\"" + description + "\"";
     }
     public CreateAction(String inputs, String outputs, String description, String bridges) {
       paramStr = "";
       paramStr += "\"inputs\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "inputs") + "\",";
       paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+      paramStr += "\"description\":\"" + description + "\",";
       paramStr += "\"bridges\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "bridges") + "\"";
     }
     public CreateAction(String inputs, String outputs, String description, String bridges, String labels) {
       paramStr = "";
       paramStr += "\"inputs\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "inputs") + "\",";
       paramStr += "\"outputs\":\"" + checkForJSONErrorAndReturnToApp(outputs, "createAction", "outputs") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\"";
+      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createAction", "description") + "\",";
       paramStr += "\"bridges\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "bridges") + "\",";
       paramStr += "\"labels\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "labels") + "\"";
     }
@@ -506,7 +490,7 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createAction\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -554,6 +538,7 @@ public class SDKActivity extends AppCompatActivity {
       return decryptedText
   }
   */
+  // public func createHmac(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = "self", privileged: Bool? = nil) async -> String {
   // Default values enforced by overloading constructor
   public class CreateHmac extends CallBaseTypes {
 
@@ -564,41 +549,41 @@ public class SDKActivity extends AppCompatActivity {
 
     public CreateHmac(String data, String protocolID, String keyID) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
+      paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"counterparty\":\"self\"";
     }
     public CreateHmac(String data, String protocolID, String keyID, String description) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createHmac", "description") + "\",";
+      paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
       paramStr += "\"counterparty\":\"self\"";
     }
     public CreateHmac(String data, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createHmac", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createHmac", "counterparty") + "\"";
+      paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\"";
     }
     public CreateHmac(String data, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(data, "createHmac", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createHmac", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createHmac", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createHmac", "counterparty") + "\",";
-      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "createHmac", "privileged") + "\"";
+      paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"" + privileged + "\"";
    }
     public String caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createHmac\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -667,43 +652,43 @@ public class SDKActivity extends AppCompatActivity {
 
     public VerifyHmac(String data, String hmac, String protocolID, String keyID) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
-      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"hmac\":\"" + checkIsBase64(hmac) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
     }
     public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
-      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifyHmac", "description") + "\",";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"hmac\":\"" + checkIsBase64(hmac) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\"";
     }
     public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
-      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifyHmac", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifyHmac", "counterparty") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"hmac\":\"" + checkIsBase64(hmac) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\"";
     }
     public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifyHmac", "data") + "\",";
-      paramStr += "\"hmac\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(hmac), "verifyHmac", "hmac") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifyHmac", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifyHmac", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifyHmac", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifyHmac", "counterparty") + "\",";
-      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "verifyHmac", "privileged") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"hmac\":\"" + checkIsBase64(hmac) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"" + privileged + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"verifyHmac\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -760,7 +745,7 @@ public class SDKActivity extends AppCompatActivity {
 
     public CreateSignature(String data, String protocolID, String keyID) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\"";
     }
@@ -792,7 +777,7 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createSignature\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -909,7 +894,7 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"verifySignature\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -970,7 +955,7 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createCertificate\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -1028,7 +1013,7 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"ninja.findCertificates\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -1093,7 +1078,7 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"proveCertificate\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -1166,7 +1151,7 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"submitDirectTransaction\",";
-      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -1248,6 +1233,7 @@ public class SDKActivity extends AppCompatActivity {
       resultStr = str;
     } catch (JSONException e) {
       Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+      intent.putExtra("result", str);
       intent.putExtra("type", type);
       intent.putExtra("uuid", uuid);
       intent.putExtra("error", "invalid JSON");
