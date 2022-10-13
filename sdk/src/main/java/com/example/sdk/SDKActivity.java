@@ -1198,7 +1198,97 @@ public class SDKActivity extends AppCompatActivity {
       let publicKey:String = (responseObject.objectValue?["result"]?.stringValue)!
       return publicKey
   }
+  */
+  //   public func getPublicKey(protocolID: JSON?, keyID: String? = nil, privileged: Bool? = nil, identityKey: Bool? = nil, reason: String? = nil, counterparty: String? = "self", description: String? = nil) async -> String {
+  public class GetPublicKey extends CallBaseTypes {
 
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public GetPublicKey() {}
+
+    // Default values enforced by overloading constructor
+    public GetPublicKey(String protocolID) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"counterparty\":\"self\"";
+    }
+    public GetPublicKey(String protocolID, String keyID) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"counterparty\":\"self\"";
+    }
+    public GetPublicKey(String protocolID, String keyID, String privileged) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"privileged\":\"" + privileged + "\",";
+      paramStr += "\"counterparty\":\"self\"";
+    }
+    public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"privileged\":\"" + privileged + "\",";
+      paramStr += "\"identityKey\":\"" + identityKey + "\",";
+      paramStr += "\"counterparty\":\"self\"";
+    }
+    public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey, String reason) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"privileged\":\"" + privileged + "\",";
+      paramStr += "\"identityKey\":\"" + identityKey + "\",";
+      paramStr += "\"reason\":\"" + reason + "\",";
+      paramStr += "\"counterparty\":\"self\"";
+    }
+    public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey, String reason, String counterparty) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"privileged\":\"" + privileged + "\",";
+      paramStr += "\"identityKey\":\"" + identityKey + "\",";
+      paramStr += "\"reason\":\"" + reason + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+    }
+    public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey, String reason, String counterparty, String description) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"privileged\":\"" + privileged + "\",";
+      paramStr += "\"identityKey\":\"" + identityKey + "\",";
+      paramStr += "\"reason\":\"" + reason + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"description\":\"" + description + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"getPublicKey\",";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CREATE_ACTION", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "getPublicKey");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"getPublicKey", "result");
+      }
+    }
+  }
+
+  /*
   @available(iOS 15.0, *)
   public func getVersion() async -> String {
       // Construct the expected command to send
@@ -1216,7 +1306,214 @@ public class SDKActivity extends AppCompatActivity {
       return version
   }
   */
+  // public func getVersion() async -> String {
+  public class GetVersion extends CallBaseTypes {
 
+    public String caller() {
+      return "{\"type\":\"CWI\",\"call\":\"getVersion\",\"params\":{},\"id\":\"uuid\"}";
+    }
+
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_GET_VERSION", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "generateCryptoKey");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"getVersion", "result");
+      }
+    }
+  }
+  /*
+  @available(iOS 15.0, *)
+  public func createPushDropScript(fields: JSON, protocolID: String, keyID: String) async -> String {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"pushdrop.create",
+          "params": [
+              "fields": fields,
+              "protocolID": convertToJSONString(param: protocolID),
+              "keyID": convertToJSONString(param: keyID)
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+      let script:String = (responseObject.objectValue?["result"]?.stringValue)!
+      return script
+  }
+  */
+  // public func createPushDropScript(fields: JSON, protocolID: String, keyID: String) async -> String {
+  public class CreatePushDropScript extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public CreatePushDropScript() {}
+
+    // Default values enforced by overloading constructor
+    public CreatePushDropScript(String fields, String protocolID, String keyID) {
+      paramStr = "";
+      paramStr += "\"fields\":\"" + checkForJSONErrorAndReturnToApp(fields, "createPushDropScript", "fields") + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"createPushDropScript\",";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_CREATE_PUSH_DROP", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "createPushDropScript");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"createPushDropScript", "result");
+      }
+    }
+  }
+  /*
+  @available(iOS 15.0, *)
+  public func parapetRequest(resolvers: JSON, bridge: String, type: String, query: JSON) async -> JSON {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"parapet",
+          "params": [
+              "resolvers": resolvers,
+              "bridge": convertToJSONString(param: bridge),
+              "type": convertToJSONString(param: type),
+              "query": query
+            ]
+          ]
+
+      // Run the command and get the response JSON object
+      let result = await runCommand(cmd: &cmd).value
+      return result
+  }
+  */
+  // public func parapetRequest(resolvers: JSON, bridge: String, type: String, query: JSON) async -> JSON {
+  public class ParapetRequest extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public ParapetRequest() {}
+
+    // Default values enforced by overloading constructor
+    public ParapetRequest(String resolvers, String bridge, String type, String query) {
+      paramStr = "";
+      paramStr += "\"resolvers\":\"" + checkForJSONErrorAndReturnToApp(resolvers, "parapetRequest", "resolvers") + "\",";
+      paramStr += "\"bridge\":\"" + bridge + "\",";
+      paramStr += "\"type\":\"" + type + "\"";
+      paramStr += "\"query\":\"" + checkForJSONErrorAndReturnToApp(query, "parapetRequest", "query") + "\",";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"parapetRequest\",";
+      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_PARA_REQUEST", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "parapetRequest");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"parapetRequest", "result");
+      }
+    }
+  }
+  /*
+  @available(iOS 15.0, *)
+  public func downloadUHRPFile(URL: String, bridgeportResolvers: JSON) async -> Data? {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"downloadFile",
+          "params": [
+              "URL": convertToJSONString(param: URL),
+              "bridgeportResolvers": bridgeportResolvers
+          ]
+      ]
+
+      // TODO: Determine return type and best way to transfer large bytes of data.
+      // Run the command and get the response JSON object
+      let result = await runCommand(cmd: &cmd).value
+
+      // Convert the array of JSON objects to an Array of UInt8s and then to a Data object
+      // TODO: Optimize further
+      if let arrayOfJSONObjects = result.objectValue?["result"]?.objectValue?["data"]?.objectValue?["data"]?.arrayValue {
+          let byteArray:[UInt8] = arrayOfJSONObjects.map { UInt8($0.doubleValue!)}
+          return Data(byteArray)
+      }
+      return nil
+  }
+  */
+  // public func downloadUHRPFile(URL: String, bridgeportResolvers: JSON) async -> Data? {
+
+  /*
+  @available(iOS 15.0, *)
+  public func newAuthriteRequest(params: JSON, requestUrl: String, fetchConfig: JSON) async -> JSON {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"newAuthriteRequest",
+          "params": [
+              "params": params,
+              "requestUrl": convertToJSONString(param: requestUrl),
+              "fetchConfig": fetchConfig
+          ]
+      ]
+
+      // TODO: Determine return type and best way to transfer large bytes of data.
+      // Run the command and get the response JSON object
+      let result = await runCommand(cmd: &cmd).value
+      return result
+  }
+
+  @available(iOS 15.0, *)
+  public func createOutputScriptFromPubKey(derivedPublicKey: String) async -> String {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"createOutputScriptFromPubKey",
+          "params": [
+              "derivedPublicKey": convertToJSONString(param: derivedPublicKey)
+          ]
+      ]
+
+      // Run the command and get the response as a string
+      let responseObject = await runCommand(cmd: &cmd).value
+      return (responseObject.objectValue?["result"]?.stringValue)!
+  }
+  */
   /*** Helper methods ***/
   private String checkIsBase64(String str) {
     String returnStr = str;
