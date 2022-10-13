@@ -760,33 +760,33 @@ public class SDKActivity extends AppCompatActivity {
 
     public CreateSignature(String data, String protocolID, String keyID) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
     }
     public CreateSignature(String data, String protocolID, String keyID, String description) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createSignature", "description") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\"";
     }
     public CreateSignature(String data, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createSignature", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createSignature", "counterparty") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\"";
     }
     public CreateSignature(String data, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "createSignature", "data") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "createSignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "createSignature", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "createSignature", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "createSignature", "counterparty") + "\",";
-      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "createSignature", "privileged") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"" + privileged + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -862,48 +862,48 @@ public class SDKActivity extends AppCompatActivity {
 
     public VerifySignature(String data, String signature, String protocolID, String keyID) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
-      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"signature\":\"" + checkIsBase64(signature) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
     }
     public VerifySignature(String data, String signature, String protocolID, String keyID, String description) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
-      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"signature\":\"" + checkIsBase64(signature) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\"";
     }
     public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
-      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifySignature", "counterparty") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"signature\":\"" + checkIsBase64(signature) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\"";
     }
     public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
-      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifySignature", "counterparty") + "\",";
-      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "verifySignature", "privileged") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"signature\":\"" + checkIsBase64(signature) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"" + privileged + "\"";
     }
     public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty, String privileged, String reason) {
       paramStr = "";
-      paramStr += "\"data\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(data), "verifySignature", "data") + "\",";
-      paramStr += "\"signature\":\"" + checkForJSONErrorAndReturnToApp(checkIsBase64(signature), "verifySignature", "signature") + "\",";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "verifySignature", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + checkForJSONErrorAndReturnToApp(keyID, "verifySignature", "keyID") + "\",";
-      paramStr += "\"description\":\"" + checkForJSONErrorAndReturnToApp(description, "verifySignature", "description") + "\",";
-      paramStr += "\"counterparty\":\"" + checkForJSONErrorAndReturnToApp(counterparty, "verifySignature", "counterparty") + "\",";
-      paramStr += "\"privileged\":\"" + checkForJSONErrorAndReturnToApp(privileged, "verifySignature", "privileged") + "\",";
-      paramStr += "\"reason\":\"" + checkForJSONErrorAndReturnToApp(reason, "verifySignature", "reason") + "\"";
+      paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
+      paramStr += "\"signature\":\"" + checkIsBase64(signature) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"" + privileged + "\",";
+      paramStr += "\"reason\":\"" + reason + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -961,10 +961,10 @@ public class SDKActivity extends AppCompatActivity {
 
     public CreateCertificate(String certificateType, String fieldObject, String certifierUrl, String certifierPublicKey) {
       paramStr = "";
-      paramStr += "\"certificateType\":\"" + checkForJSONErrorAndReturnToApp(certificateType, "createCertificate", "certificateType") + "\",";
+      paramStr += "\"certificateType\":\"" + certificateType + "\",";
       paramStr += "\"fieldObject\":\"" + checkForJSONErrorAndReturnToApp(fieldObject, "createCertificate", "fieldObject") + "\",";
-      paramStr += "\"certifierUrl\":\"" + checkForJSONErrorAndReturnToApp(certifierUrl, "createCertificate", "certifierUrl") + "\",";
-      paramStr += "\"certifierPublicKey\":\"" + checkForJSONErrorAndReturnToApp(certifierPublicKey, "createCertificate", "certifierPublicKey") + "\"";
+      paramStr += "\"certifierUrl\":\"" + certifierUrl + "\",";
+      paramStr += "\"certifierPublicKey\":\"" + certifierPublicKey + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -1022,7 +1022,7 @@ public class SDKActivity extends AppCompatActivity {
     public GetCertificates(String certifiers, String types) {
       paramStr = "";
       paramStr += "\"certifiers\":\"" + checkForJSONErrorAndReturnToApp(certifiers, "ninja.findCertificates", "certifiers") + "\",";
-      paramStr += "\"types\":\"" + checkForJSONErrorAndReturnToApp(types, "ninja.findCertificates", "types") + "\",";
+      paramStr += "\"types\":\"" + checkForJSONErrorAndReturnToApp(types, "ninja.findCertificates", "types") + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -1081,13 +1081,13 @@ public class SDKActivity extends AppCompatActivity {
     public ProveCertificate(String certificate, String verifierPublicIdentityKey) {
       paramStr = "";
       paramStr += "\"certificate\":\"" + checkForJSONErrorAndReturnToApp(certificate, "proveCertificate", "certificate") + "\",";
-      paramStr += "\"verifierPublicIdentityKey\":\"" + checkForJSONErrorAndReturnToApp(verifierPublicIdentityKey, "proveCertificate", "verifierPublicIdentityKey") + "\",";
+      paramStr += "\"verifierPublicIdentityKey\":\"" + verifierPublicIdentityKey + "\"";
     }
     public ProveCertificate(String certificate, String fieldsToReveal, String verifierPublicIdentityKey) {
       paramStr = "";
       paramStr += "\"certificate\":\"" + checkForJSONErrorAndReturnToApp(certificate, "proveCertificate", "certificate") + "\",";
       paramStr += "\"fieldsToReveal\":\"" + checkForJSONErrorAndReturnToApp(fieldsToReveal, "proveCertificate", "fieldsToReveal") + "\",";
-      paramStr += "\"verifierPublicIdentityKey\":\"" + checkForJSONErrorAndReturnToApp(verifierPublicIdentityKey, "proveCertificate", "verifierPublicIdentityKey") + "\",";
+      paramStr += "\"verifierPublicIdentityKey\":\"" + verifierPublicIdentityKey + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -1114,7 +1114,123 @@ public class SDKActivity extends AppCompatActivity {
       }
     }
   }
+  /*
+  @available(iOS 15.0, *)
+  public func submitDirectTransaction(protocolID: String, transaction: JSON, senderIdentityKey: String, note: String, amount: Int, derivationPrefix: String? = nil) async -> JSON {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"ninja.submitDirectTransaction",
+          "params": [
+              "protocol": convertToJSONString(param: protocolID),
+              "transaction": transaction,
+              "senderIdentityKey": convertToJSONString(param: senderIdentityKey),
+              "note": convertToJSONString(param: note),
+              "amount": try! JSON(amount),
+              "derivationPrefix": try! JSON(derivationPrefix ?? "")
+          ]
+      ]
 
+      // Run the command and get the response JSON object
+      let provableCertificate = await runCommand(cmd: &cmd).value
+      return provableCertificate
+  }
+  */
+  //   public func submitDirectTransaction(protocolID: String, transaction: JSON, senderIdentityKey: String, note: String, amount: Int, derivationPrefix: String? = nil) async -> JSON {
+  // Default values enforced by overloading constructor
+  public class SubmitDirectTransaction extends CallBaseTypes {
+
+    private String paramStr = "";
+
+    // Required for polymorphism
+    public SubmitDirectTransaction() {}
+
+    public SubmitDirectTransaction(String protocolID, String transaction, String senderIdentityKey, String note, String amount) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"transaction\":\"" + checkForJSONErrorAndReturnToApp(transaction, "submitDirectTransaction", "transaction") + "\",";
+      paramStr += "\"senderIdentityKey\":\"" + senderIdentityKey + "\",";
+      paramStr += "\"note\":\"" + note + "\",";
+      paramStr += "\"amount\":\"" + amount + "\"";
+    }
+    public SubmitDirectTransaction(String protocolID, String transaction, String senderIdentityKey, String note, String amount, String derivationPrefix) {
+      paramStr = "";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"transaction\":\"" + checkForJSONErrorAndReturnToApp(transaction, "submitDirectTransaction", "transaction") + "\",";
+      paramStr += "\"senderIdentityKey\":\"" + senderIdentityKey + "\",";
+      paramStr += "\"note\":\"" + note + "\",";
+      paramStr += "\"amount\":\"" + amount + "\",";
+      paramStr += "\"derivationPrefix\":\"" + derivationPrefix + "\"";
+    }
+    public String caller() {
+      String cmdJSONString = "{";
+      cmdJSONString += "\"type\":\"CWI\",";
+      cmdJSONString += "\"call\":\"submitDirectTransaction\",";
+      cmdJSONString += "\"params\":\"{" + paramStr + "\"},";
+      cmdJSONString += "\"id\":\"uuid\"";
+      cmdJSONString += "}";
+      return cmdJSONString;
+    }
+    public void called(String returnResult) {
+      Log.i("WEBVIEW_SUBMIT_DIRECT_TX", "called():returnResult:" + returnResult);
+      try {
+        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        String uuid = jsonReturnResultObject.get("uuid").toString();
+        String result = jsonReturnResultObject.get("result").toString();
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("type", "submitDirectTransaction");
+        intent.putExtra("uuid", uuid);
+        intent.putExtra("result", result);
+        startActivity(intent);
+      } catch (JSONException e) {
+        checkForJSONErrorAndReturnToApp(returnResult,"submitDirectTransaction", "result");
+      }
+    }
+  }
+  /*
+  @available(iOS 15.0, *)
+  public func getPublicKey(protocolID: JSON?, keyID: String? = nil, priviliged: Bool? = nil, identityKey: Bool? = nil, reason: String? = nil, counterparty: String? = "self", description: String? = nil) async -> String {
+      // Construct the expected command to send
+      // Added default values for dealing with nil params
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"getPublicKey",
+          "params": [
+              "protocolID": protocolID ?? "",
+              "keyID": try! JSON(keyID!),
+              "priviliged": try! JSON(priviliged ?? false),
+              "identityKey": try! JSON(identityKey ?? false),
+              "reason": try! JSON(reason ?? ""),
+              "counterparty": try! JSON(counterparty ?? ""),
+              "description": try! JSON(description ?? "")
+          ]
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+
+      // Pull out the expect result string
+      let publicKey:String = (responseObject.objectValue?["result"]?.stringValue)!
+      return publicKey
+  }
+
+  @available(iOS 15.0, *)
+  public func getVersion() async -> String {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"getVersion",
+          "params": []
+      ]
+
+      // Run the command and get the response JSON object
+      let responseObject = await runCommand(cmd: &cmd).value
+
+      // Pull out the expect result string
+      let version:String = (responseObject.objectValue?["result"]?.stringValue)!
+      return version
+  }
+  */
 
   /*** Helper methods ***/
   private String checkIsBase64(String str) {
