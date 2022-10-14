@@ -1,0 +1,81 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.babbage",
+    "module": "sdk",
+    "version": "0.2.26",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.4"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "sdk-0.2.26.aar",
+          "url": "sdk-0.2.26.aar",
+          "size": 90689,
+          "sha512": "9c0a9ce7f43ba0085714b80d40ffc6c354fe0d41286008bc12bd03009ddc04978ed17af171489b0d21d071fe457cafa9cc3c6a8d801af786ba8e4d45f0680eb5",
+          "sha256": "4207ee02a63a1437a6ade842bd2d1dc31ccd258b96d6e3b7c7a830fb26826896",
+          "sha1": "aa284b46db01a4e3d3d24f45d42e6b04aaae3006",
+          "md5": "a358b4a89652c1cbb69dfb59f140dde2"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "commons-codec",
+          "module": "commons-codec",
+          "version": {
+            "requires": "1.11"
+          }
+        },
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.5.1"
+          }
+        },
+        {
+          "group": "com.google.android.material",
+          "module": "material",
+          "version": {
+            "requires": "1.6.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "sdk-0.2.26.aar",
+          "url": "sdk-0.2.26.aar",
+          "size": 90689,
+          "sha512": "9c0a9ce7f43ba0085714b80d40ffc6c354fe0d41286008bc12bd03009ddc04978ed17af171489b0d21d071fe457cafa9cc3c6a8d801af786ba8e4d45f0680eb5",
+          "sha256": "4207ee02a63a1437a6ade842bd2d1dc31ccd258b96d6e3b7c7a830fb26826896",
+          "sha1": "aa284b46db01a4e3d3d24f45d42e6b04aaae3006",
+          "md5": "a358b4a89652c1cbb69dfb59f140dde2"
+        }
+      ]
+    }
+  ]
+}

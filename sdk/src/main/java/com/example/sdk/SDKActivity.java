@@ -85,19 +85,99 @@ public class SDKActivity extends AppCompatActivity {
 
     public CallBaseTypes type = null;
 
-    // These methods are called from JaScript, so are given compile time warnings as never used
+    // These methods are called from JavaScript, so are given compile time warnings as never used
+    @JavascriptInterface
+    public void dbg(String returnResult) {
+      Log.i("WEBVIEW_DBG", returnResult);
+    }
     @JavascriptInterface
     public void isAuthenticated(String returnResult) {
       callTypes.called(returnResult);
     }
-
     @JavascriptInterface
     public void encrypt(String returnResult) {
+      Log.i("WEBVIEW_INT_ENCRYPT", "called():encrypt:returnResult:" + returnResult);
       callTypes.called(returnResult);
     }
-
     @JavascriptInterface
     public void decrypt(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void generateCryptoKey(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void encryptUsingCryptoKey(String returnResult) {
+      Log.i("WEBVIEW_INT_KEY_ENCRYPT", "called():encryptUsingCryptoKey:returnResult:" + returnResult);
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void decryptUsingCryptoKey(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void createAction(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void createHmac(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void verifyHmac(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void createSignature(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void verifySignature(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void createCertificate(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void getCertificates(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void proveCertificate(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void submitDirectTransaction(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void getPublicKey(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void getVersion(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void createPushDropScript(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void parapetRequest(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void downloadUHRPFile(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void newAuthriteRequest(String returnResult) {
+      callTypes.called(returnResult);
+    }
+    @JavascriptInterface
+    public void createOutputScriptFromPubKey(String returnResult) {
       callTypes.called(returnResult);
     }
   }
@@ -162,7 +242,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr = "";
       paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"returnType\":\"string\"";
     }
 
     public String caller() {
@@ -203,7 +284,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr = "";
       paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"returnType\":\"string\"";
     }
 
     public String caller() {
@@ -322,7 +404,6 @@ public class SDKActivity extends AppCompatActivity {
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"encryptUsingCryptoKey\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
-      cmdJSONString += "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
@@ -552,7 +633,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"counterparty\":\"self\"";
+      paramStr += "\"counterparty\":\"self\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public CreateHmac(String data, String protocolID, String keyID, String description) {
       paramStr = "";
@@ -560,7 +642,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"description\":\"" + description + "\",";
-      paramStr += "\"counterparty\":\"self\"";
+      paramStr += "\"counterparty\":\"self\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public CreateHmac(String data, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
@@ -568,7 +651,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"description\":\"" + description + "\",";
-      paramStr += "\"counterparty\":\"" + counterparty + "\"";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public CreateHmac(String data, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
@@ -655,7 +739,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
       paramStr += "\"hmac\":\"" + checkIsBase64(hmac) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description) {
       paramStr = "";
@@ -663,7 +748,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"hmac\":\"" + checkIsBase64(hmac) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"description\":\"" + description + "\"";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
@@ -672,7 +758,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"description\":\"" + description + "\",";
-      paramStr += "\"counterparty\":\"" + counterparty + "\"";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public VerifyHmac(String data, String hmac, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
@@ -747,14 +834,16 @@ public class SDKActivity extends AppCompatActivity {
       paramStr = "";
       paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public CreateSignature(String data, String protocolID, String keyID, String description) {
       paramStr = "";
       paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"description\":\"" + description + "\"";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public CreateSignature(String data, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
@@ -762,7 +851,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"description\":\"" + description + "\",";
-      paramStr += "\"counterparty\":\"" + counterparty + "\"";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public CreateSignature(String data, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
@@ -850,7 +940,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
       paramStr += "\"signature\":\"" + checkIsBase64(signature) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public VerifySignature(String data, String signature, String protocolID, String keyID, String description) {
       paramStr = "";
@@ -858,7 +949,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"signature\":\"" + checkIsBase64(signature) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"description\":\"" + description + "\"";
+      paramStr += "\"description\":\"" + description + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty) {
       paramStr = "";
@@ -867,7 +959,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"description\":\"" + description + "\",";
-      paramStr += "\"counterparty\":\"" + counterparty + "\"";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"privileged\":\"false\"";
     }
     public VerifySignature(String data, String signature, String protocolID, String keyID, String description, String counterparty, String privileged) {
       paramStr = "";
@@ -1211,25 +1304,30 @@ public class SDKActivity extends AppCompatActivity {
     public GetPublicKey(String protocolID) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"privileged\":\"false\",";
+      paramStr += "\"identityKey\":\"false\",";
       paramStr += "\"counterparty\":\"self\"";
     }
     public GetPublicKey(String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"privileged\":\"false\",";
+      paramStr += "\"identityKey\":\"false\",";
       paramStr += "\"counterparty\":\"self\"";
     }
     public GetPublicKey(String protocolID, String keyID, String privileged) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\",";
+      paramStr += "\"identityKey\":\"false\",";
       paramStr += "\"counterparty\":\"self\"";
     }
     public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\",";
       paramStr += "\"identityKey\":\"" + identityKey + "\",";
       paramStr += "\"counterparty\":\"self\"";
@@ -1237,7 +1335,7 @@ public class SDKActivity extends AppCompatActivity {
     public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey, String reason) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\",";
       paramStr += "\"identityKey\":\"" + identityKey + "\",";
       paramStr += "\"reason\":\"" + reason + "\",";
@@ -1246,16 +1344,16 @@ public class SDKActivity extends AppCompatActivity {
     public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey, String reason, String counterparty) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\",";
       paramStr += "\"identityKey\":\"" + identityKey + "\",";
       paramStr += "\"reason\":\"" + reason + "\",";
-      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\"";
     }
     public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey, String reason, String counterparty, String description) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\"";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\",";
       paramStr += "\"identityKey\":\"" + identityKey + "\",";
       paramStr += "\"reason\":\"" + reason + "\",";
@@ -1361,8 +1459,8 @@ public class SDKActivity extends AppCompatActivity {
     public CreatePushDropScript(String fields, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"fields\":\"" + checkForJSONErrorAndReturnToApp(fields, "createPushDropScript", "fields") + "\",";
-      paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"protocolID\":\"" + protocolID + "\"";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -1422,8 +1520,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr = "";
       paramStr += "\"resolvers\":\"" + checkForJSONErrorAndReturnToApp(resolvers, "parapetRequest", "resolvers") + "\",";
       paramStr += "\"bridge\":\"" + bridge + "\",";
-      paramStr += "\"type\":\"" + type + "\"";
-      paramStr += "\"query\":\"" + checkForJSONErrorAndReturnToApp(query, "parapetRequest", "query") + "\",";
+      paramStr += "\"type\":\"" + type + "\",";
+      paramStr += "\"query\":\"" + checkForJSONErrorAndReturnToApp(query, "parapetRequest", "query") + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -1487,8 +1585,8 @@ public class SDKActivity extends AppCompatActivity {
     // Default values enforced by overloading constructor
     public DownloadUHRPFile(String URL, String bridgeportResolvers) {
       paramStr = "";
-      paramStr += "\"URL\":\"" + URL + "\"";
-      paramStr += "\"bridgeportResolvers\":\"" + checkForJSONErrorAndReturnToApp(bridgeportResolvers, "downloadUHRPFile", "bridgeportResolvers") + "\",";
+      paramStr += "\"URL\":\"" + URL + "\",";
+      paramStr += "\"bridgeportResolvers\":\"" + checkForJSONErrorAndReturnToApp(bridgeportResolvers, "downloadUHRPFile", "bridgeportResolvers") + "\"";
     }
     public String caller() {
       String cmdJSONString = "{";
@@ -1547,7 +1645,7 @@ public class SDKActivity extends AppCompatActivity {
     public NewAuthriteRequest(String params, String requestUrl, String fetchConfig) {
       paramStr = "";
       paramStr += "\"params\":\"" + checkForJSONErrorAndReturnToApp(params, "newAuthriteRequest", "params") + "\",";
-      paramStr += "\"requestUrl\":\"" + requestUrl + "\"";
+      paramStr += "\"requestUrl\":\"" + requestUrl + "\",";
       paramStr += "\"fetchConfig\":\"" + checkForJSONErrorAndReturnToApp(fetchConfig, "newAuthriteRequest", "fetchConfig") + "\"";
     }
     public String caller() {
@@ -1636,20 +1734,22 @@ public class SDKActivity extends AppCompatActivity {
     }
     return returnStr;
   }
-
+  private void returnError(String str, String type, String message, String field){
+    Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+    intent.putExtra("result", str);
+    intent.putExtra("type", type);
+    intent.putExtra("uuid", uuid);
+    intent.putExtra("error", message);
+    intent.putExtra("field", field);
+    startActivity(intent);
+  }
   private String checkForJSONErrorAndReturnToApp(String str, String type, String field) {
     String resultStr = "";
     try {
       new JSONObject(str);
       resultStr = str;
     } catch (JSONException e) {
-      Intent intent = new Intent(SDKActivity.this, classObject.getClass());
-      intent.putExtra("result", str);
-      intent.putExtra("type", type);
-      intent.putExtra("uuid", uuid);
-      intent.putExtra("error", "invalid JSON");
-      intent.putExtra("field", field);
-      startActivity(intent);
+      returnError(str, type, "invalid JSON", field);
     }
     return resultStr;
   }
@@ -1829,11 +1929,6 @@ public class SDKActivity extends AppCompatActivity {
                 intent.getStringExtra("keyID")
               )
             );
-            waitingCallType.push(new IsAuthenticated());
-
-            // Need to start the child thread to call waitForAuthenticated run command
-            WorkerThread workerThread = new WorkerThread();
-            workerThread.start();
           }
           if (type.equals("decrypt")) {
             waitingCallType.push(
@@ -1843,27 +1938,33 @@ public class SDKActivity extends AppCompatActivity {
                 intent.getStringExtra("keyID")
               )
             );
-            waitingCallType.push(new IsAuthenticated());
-            // Need to start the child thread to call IsAuthenticated run command
           }
           if (type.equals("generateCryptoKey")) {
             waitingCallType.push(new GenerateCryptoKey());
           }
           if (type.equals("encryptUsingCryptoKey")) {
+            String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
+            if (!isBase64(base64CryptoKey)){
+              returnError(base64CryptoKey, "encryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
+            }
             waitingCallType.push(
               new EncryptUsingCryptoKey(
                 intent.getStringExtra("plaintext"),
-                intent.getStringExtra("base64CryptoKey"),
-                intent.getStringExtra("returnType")
+                base64CryptoKey,
+                !intent.getStringExtra("returnType").equals("") ? intent.getStringExtra("returnType") : "base64"
               )
             );
           }
           if (type.equals("decryptUsingCryptoKey")) {
+            String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
+            if (!isBase64(base64CryptoKey)){
+              returnError(base64CryptoKey, "decryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
+            }
             waitingCallType.push(
               new DecryptUsingCryptoKey(
                 intent.getStringExtra("ciphertext"),
-                intent.getStringExtra("base64CryptoKey"),
-                intent.getStringExtra("returnType")
+                base64CryptoKey,
+                !intent.getStringExtra("returnType").equals("") ? intent.getStringExtra("returnType") : "base64"
               )
             );
           }
@@ -1885,7 +1986,7 @@ public class SDKActivity extends AppCompatActivity {
                 intent.getStringExtra("protocolID"),
                 intent.getStringExtra("keyID"),
                 intent.getStringExtra("description"),
-                intent.getStringExtra("counterparty"),
+                !intent.getStringExtra("counterparty").equals("") ? intent.getStringExtra("counterparty") : "self",
                 intent.getStringExtra("privileged")
               )
             );
@@ -1965,6 +2066,7 @@ public class SDKActivity extends AppCompatActivity {
                 intent.getStringExtra("note"),
                 intent.getStringExtra("amount"),
                 intent.getStringExtra("derivationPrefix")
+              )
             );
           }
           if (type.equals("getPublicKey")) {
@@ -1975,7 +2077,7 @@ public class SDKActivity extends AppCompatActivity {
                 intent.getStringExtra("privileged"),
                 intent.getStringExtra("identityKey"),
                 intent.getStringExtra("reason"),
-                intent.getStringExtra("counterparty"),
+                !intent.getStringExtra("counterparty").equals("") ? intent.getStringExtra("counterparty") : "self",
                 intent.getStringExtra("description")
               )
             );
@@ -2026,6 +2128,7 @@ public class SDKActivity extends AppCompatActivity {
               )
             );
           }
+          waitingCallType.push(new IsAuthenticated());
 
           // Need to start the child thread to call IsAuthenticated run command
           WorkerThread workerThread = new WorkerThread();
@@ -2050,6 +2153,7 @@ public class SDKActivity extends AppCompatActivity {
       new WebAppInterface(),
       "androidMessageHandler"
     );
+    // webview.loadUrl("http://192.168.1.144:3000");
     webview.loadUrl("https://staging-mobile-portal.babbage.systems");
   }
 }
