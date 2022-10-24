@@ -4,6 +4,7 @@ import static org.apache.commons.codec.binary.Base64.isBase64;
 import static android.util.Base64.DEFAULT;
 import static android.util.Base64.decode;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,18 +13,27 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.webkit.JsResult;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Stack;
+import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,13 +42,139 @@ import org.json.JSONObject;
 // TODO team view what is happening on a physical device
 
 public class SDKActivity extends AppCompatActivity {
-
+  private static String URL = "https://staging-mobile-portal.babbage.systems";
   private Object classObject; // Used for Intent callback
   private WebView webview;
   private CallTypes callTypes = null; // Used as intermediate concrete class to give polymorphism
   private Stack<CallBaseTypes> waitingCallType = new Stack<CallBaseTypes>(); // Stores the waiting call type while authentication is performed
   private Handler mainThreadHandler; // Needed to keep run commands calls in a queue
   private String uuid = ""; // Has to be available to run the queued run command
+
+  /*** API ***/
+  public static class ProcessedResult {
+    public static String callType = "";
+    public static String portal = "";
+
+    public ProcessedResult() {
+      callType = "";
+      portal = "";
+    }
+  }
+  public static Intent desktop(Context activityContext, Object instance) {
+    Log.i("D_SDK", "desktop()");
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("type", "desktop");
+    intent.putExtra("url", URL);
+    return intent;
+  }
+  public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance) {
+    return generateAES256GCMCryptoKey(activityContext, instance, "");
+  }
+  public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance, String portal) {
+    Log.i("D_SDK", "generateAES256GCMCryptoKey():portal:" + portal);
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("portal", portal);
+    intent.putExtra("type", "generateAES256GCMCryptoKey");
+    intent.putExtra("uuid", UUID.randomUUID().toString());
+    intent.putExtra("url", URL);
+    return intent;
+  }
+  public static Intent encryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText) {
+    return encryptUsingCryptoKey(activityContext, instance, cryptoKeyText, messageText, "");
+  }
+  public static Intent encryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String portal) {
+    Log.i("D_SDK", "encryptUsingCryptoKey()portal:" + portal);
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("portal", portal);
+    intent.putExtra("type", "encryptUsingCryptoKey");
+    intent.putExtra("uuid", UUID.randomUUID().toString());
+    intent.putExtra("plaintext", messageText.getText().toString());
+    intent.putExtra("base64CryptoKey", cryptoKeyText.getText().toString());
+    intent.putExtra("returnType", "base64");
+    intent.putExtra("url", URL);
+    return intent;
+  }
+  public static Intent decryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText) {
+    return decryptUsingCryptoKey(activityContext, instance, cryptoKeyText, messageText, "");
+  }
+  public static Intent decryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String portal) {
+    Log.i("D_SDK", "decryptUsingCryptoKey():portal:" + portal);
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("portal", portal);
+    intent.putExtra("type", "decryptUsingCryptoKey");
+    intent.putExtra("uuid", UUID.randomUUID().toString());
+    intent.putExtra("ciphertext", messageText.getText().toString());
+    intent.putExtra("base64CryptoKey", cryptoKeyText.getText().toString());
+    intent.putExtra("returnType", "base64");
+    intent.putExtra("url", URL);
+    return intent;
+  }
+  public static ProcessedResult processResult(Context activityContext, Object instance, Intent intent, TextView cryptoKeyText, EditText messageText) {
+    ProcessedResult processedResult = new ProcessedResult();
+    String result = intent.getStringExtra("result");
+    Log.i("D_SDK", "processResult():result:" + result);
+    String type = "";
+    if (result != null) {
+      String error = intent.getStringExtra("error");
+      type = intent.getStringExtra("type");
+      Log.i("D_SDK", "processResult():first type:" + type);
+      if (error != null) {
+        String field = intent.getStringExtra("field");
+        String str = "processResult():call type:" + type + ",field:" + field + ",error:" + error;
+        Log.i("D_SDK_ERROR", str);
+        Toast.makeText(activityContext, str, Toast.LENGTH_LONG).show();
+        type = "";
+      }
+      String uuid = intent.getStringExtra("uuid");
+      if (result.equals("openBabbage")) {
+        Log.i("D_SDK", "processResult():result=\"openBabbage\"");
+        if (type.equals("encryptUsingCryptoKey")) {
+          processedResult.callType =  "encryptUsingCryptoKey";
+          processedResult.portal = "openBabbage";
+        }
+        type = "";
+      }
+
+      // If not authenticated Babbage Desktop is displayed and user must register
+      // for an account. Wait for authentication
+      Log.i("D_SDK", "processResult():second type:" + type);
+      if (type.equals("isAuthenticated")) {
+        if (result.equals("false")) {
+          Log.i("D_SDK", "processResult():call waitForAuthentication");
+          String waitingType = intent.getStringExtra("waitingType");
+          Log.i("D_SDK", "processResult():waitingType:" + waitingType);
+          ProcessedResult.callType = waitingType;
+          ProcessedResult.portal = "waitForAuthentication";
+        }
+      }
+      if (type.equals("generateAES256GCMCryptoKey")) {
+        Log.i("D_SDK", "processResult():generateAES256GCMCryptoKey:result:" + result);
+        cryptoKeyText.setText(result);
+        ProcessedResult.callType = "encryptUsingCryptoKey";
+      }
+
+      // Process returned value
+      if (type.equals("encryptUsingCryptoKey")) {
+        Log.i("D_SDK", "processResult():encryptUsingCryptoKey set text");
+        messageText.setText(result);
+        String cryptoKey = intent.getStringExtra("cryptoKey");
+        cryptoKeyText.setText(cryptoKey);
+      }
+      if (type.equals("decryptUsingCryptoKey")) {
+        Log.i("D_SDK", "processResult():decryptUsingCryptoKey set text");
+        messageText.setText(result);
+        String cryptoKey = intent.getStringExtra("cryptoKey");
+        cryptoKeyText.setText(cryptoKey);
+      }
+    }
+    Log.i("D_SDK", "processResult():callType:" + processedResult.callType + ",portal:" + processedResult.portal);
+    return processedResult;
+  }
+  /*** API ***/
 
   // This is required due to Android restrictions placed on webview
   // All run commands have to be placed in a queue (except authentication commands)
@@ -65,11 +201,15 @@ public class SDKActivity extends AppCompatActivity {
   class CallTypes extends CallBaseTypes {
 
     public CallBaseTypes type;
+    public String actualType;
+    public String portal;
 
     public CallTypes() {}
 
-    public void update(CallBaseTypes type) {
+    public void update(CallBaseTypes type, String actualType, String portal) {
       this.type = type;
+      this.actualType = actualType;
+      this.portal = portal;
     }
 
     public String caller() {
@@ -85,10 +225,38 @@ public class SDKActivity extends AppCompatActivity {
 
     public CallBaseTypes type = null;
 
-    // These methods are called from JavaScript, so are given compile time warnings as never used
+    // These methods are called from JavaScript, so are given compile time warnings as they are never used in this class
+    // @JavascriptInterface
+    // public void dbg(String returnResult) {
+    //   Log.i("D_SDK_INTERFACE_DBG", returnResult);
+    // }
     @JavascriptInterface
-    public void dbg(String returnResult) {
-      Log.i("WEBVIEW_DBG", returnResult);
+    public void openBabbage() {
+      Log.i("D_SDK_INTERFACE", "called openBabbage():callTypes.type:" + callTypes.actualType);
+      if (!callTypes.portal.equals("openBabbage")) {
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        intent.putExtra("result", "openBabbage");
+        intent.putExtra("type", callTypes.actualType);
+        intent.putExtra("uuid", uuid);
+        startActivity(intent);
+      } else {
+        Log.i("D_SDK_INTERFACE", "called openBabbage():already done");
+        callTypes.portal = "";
+      }
+    }
+    @JavascriptInterface
+    public void closeBabbage() {
+      Log.i("D_SDK_INTERFACE", "called closeBabbage():waitingCallType:" + waitingCallType);
+      WorkerThread workerThread = new WorkerThread();
+      workerThread.start();
+    }
+    @JavascriptInterface
+    public void isFocused() {
+      Log.i("D_SDK_INTERFACE_IS_FOCUSED", "called isFocused()");
+    }
+    @JavascriptInterface
+    public void waitForAuthentication(String returnResult) {
+      callTypes.called(returnResult);
     }
     @JavascriptInterface
     public void isAuthenticated(String returnResult) {
@@ -96,7 +264,6 @@ public class SDKActivity extends AppCompatActivity {
     }
     @JavascriptInterface
     public void encrypt(String returnResult) {
-      Log.i("WEBVIEW_INT_ENCRYPT", "called():encrypt:returnResult:" + returnResult);
       callTypes.called(returnResult);
     }
     @JavascriptInterface
@@ -104,13 +271,12 @@ public class SDKActivity extends AppCompatActivity {
       callTypes.called(returnResult);
     }
     @JavascriptInterface
-    public void generateCryptoKey(String returnResult) {
+    public void generateAES256GCMCryptoKey(String returnResult) {
       callTypes.called(returnResult);
     }
     @JavascriptInterface
     public void encryptUsingCryptoKey(String returnResult) {
-      Log.i("WEBVIEW_INT_KEY_ENCRYPT", "called():encryptUsingCryptoKey:returnResult:" + returnResult);
-      callTypes.called(returnResult);
+       callTypes.called(returnResult);
     }
     @JavascriptInterface
     public void decryptUsingCryptoKey(String returnResult) {
@@ -185,26 +351,30 @@ public class SDKActivity extends AppCompatActivity {
   public class IsAuthenticated extends CallBaseTypes {
 
     public String caller() {
-      return "{\"type\":\"CWI\",\"call\":\"isAuthenticated\",\"params\":{},\"id\":\"uuid\"}";
+      return "{\"type\":\"CWI\",\"call\":\"isAuthenticated\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
     }
 
     public void called(String returnResult) {
+      String result = "";
       try {
-        Log.i("WEBVIEW_AUTH", "called():returnResult:" + returnResult);
+        Log.i("D_SDK_AUTH", "called():returnResult:" + returnResult);
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
-        String result = (String)jsonReturnResultObject.get("result").toString();
+        result = (String)jsonReturnResultObject.get("result").toString();
         if (result.equals("false")) {
+          Log.i("D_SDK_AUTH", "called():return:false to App");
           Intent intent = new Intent(SDKActivity.this, classObject.getClass());
-          intent.putExtra("result", result);
+          intent.putExtra("result", "false");
           intent.putExtra("type", "isAuthenticated");
+          intent.putExtra("waitingType", callTypes.actualType);
           intent.putExtra("uuid", uuid);
           startActivity(intent);
         }
       } catch (JSONException e) {
         checkForJSONErrorAndReturnToApp(returnResult,"isAuthenticated", "result");
       }
-      if (!waitingCallType.isEmpty()) {
+      if (!waitingCallType.isEmpty() && !result.equals("false")) {
+        Log.i("D_SDK_AUTH", "called():run next command");
         // Need to start the child thread to call the waiting run command
         WorkerThread workerThread = new WorkerThread();
         workerThread.start();
@@ -212,14 +382,14 @@ public class SDKActivity extends AppCompatActivity {
     }
   }
 
-  public class WaitForAuthenticated extends CallBaseTypes {
+  public class WaitForAuthentication extends CallBaseTypes {
 
     public String caller() {
-      return "{\"type\":\"CWI\",\"call\":\"waitForAuthenticated\",\"params\":{},\"id\":\"uuid\"}";
+      return "{\"type\":\"CWI\",\"call\":\"waitForAuthentication\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
     }
 
     public void called(String returnResult) {
-      Log.i("WEBVIEW_AUTHED", "called()");
+      Log.i("D_SDK_WAIT_AUTHED", "called()");
       finish();
 
       // Once authenticated the waiting command is processed
@@ -242,22 +412,31 @@ public class SDKActivity extends AppCompatActivity {
       paramStr = "";
       paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\"";
+      // paramStr += "\"returnType\":\"string\"";
+    }
+    public Encrypt(String plaintext, String protocolID, String keyID, String returnType) {
+      paramStr = "";
+      paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"returnType\":\"string\"";
+      paramStr += "\"returnType\":\"" + returnType + "\"";
     }
 
     public String caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"encrypt\",";
-      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"params\":{" + paramStr;
+      cmdJSONString += "},";
+      cmdJSONString += "\"originator\":\"projectbabbage.com\",";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
     }
 
     public void called(String returnResult) {
-      Log.i("WEBVIEW_ENCRYPT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_ENCRYPT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -268,7 +447,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"encrypt", "result");
+        returnError(returnResult, "encrypt", "invalid JSON", "result");
       }
     }
   }
@@ -292,14 +471,16 @@ public class SDKActivity extends AppCompatActivity {
       String cmdJSONString = "";
       cmdJSONString += "{\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"decrypt\",";
-      cmdJSONString += "\"params\":{" + paramStr + "},";
+      cmdJSONString += "\"params\":{" + paramStr;
+      cmdJSONString += "},";
+      cmdJSONString += "\"originator\":\"projectbabbage.com\",";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       return cmdJSONString;
     }
 
     public void called(String returnResult) {
-      Log.i("WEBVIEW_DECRYPT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_DECRYPT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -310,18 +491,18 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"decrypt", "result");
+        returnError(returnResult, "decrypt", "invalid JSON", "result");
       }
     }
   }
 
   /*
   @available(iOS 15.0, *)
-  public func generateCryptoKey() async -> String {
+  public func generateAES256GCMCryptoKey() async -> String {
     // Construct the expected command to send
     var cmd:JSON = [
         "type":"CWI",
-        "call":"generateCryptoKey",
+        "call":"generateAES256GCMCryptoKey",
         "params": []
     ]
 
@@ -333,28 +514,29 @@ public class SDKActivity extends AppCompatActivity {
     return cryptoKey
   }
   */
-  public class GenerateCryptoKey extends CallBaseTypes {
+  public class GenerateAES256GCMCryptoKey extends CallBaseTypes {
 
     public String caller() {
-      return "{\"type\":\"CWI\",\"call\":\"generateCryptoKey\",\"params\":{},\"id\":\"uuid\"}";
+      return "{\"type\":\"CWI\",\"call\":\"generateAES256GCMCryptoKey\",\"params\":{},\"id\":\"uuid\"}";
     }
 
     public void called(String returnResult) {
-      Log.i("WEBVIEW_GEN_CRYPT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_GEN_CRYPT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
         String result = jsonReturnResultObject.get("result").toString();
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
-        intent.putExtra("type", "generateCryptoKey");
+        intent.putExtra("type", "generateAES256GCMCryptoKey");
         intent.putExtra("uuid", uuid);
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"generateCryptoKey", "result");
+        returnError(returnResult,"generateAES256GCMCryptoKey", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func encryptUsingCryptoKey(plaintext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
@@ -381,21 +563,23 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   public class EncryptUsingCryptoKey extends CallBaseTypes {
-
     private String paramStr;
-    
+    private String base64CryptoKey;
+
     // Required for polymorphism
     public EncryptUsingCryptoKey() {}
 
     public EncryptUsingCryptoKey(String plaintext, String base64CryptoKey) {
+      this.base64CryptoKey = base64CryptoKey;
       paramStr = "";
-      paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
+      paramStr += "\"plaintext\":\"" + plaintext + "\",";
       paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
       paramStr += "\"returnType\":\"base64\"";
     }
     public EncryptUsingCryptoKey(String plaintext, String base64CryptoKey, String returnType) {
+      this.base64CryptoKey = base64CryptoKey;
       paramStr = "";
-      paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
+      paramStr += "\"plaintext\":\"" + plaintext + "\",";
       paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
       paramStr += "\"returnType\":\"" + returnType + "\"";
     }
@@ -409,23 +593,25 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CRYPT_KEY_ENCRYPT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CRYPT_KEY_ENCRYPT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
         String result = jsonReturnResultObject.get("result").toString();
-        String returnType = jsonReturnResultObject.get("returnType").toString();
+        Log.i("D_SDK_CRYPT_KEY_ENCRYPT", "called():result:" + result);
+        // TODO returnType is missing?
+        // String returnType = jsonReturnResultObject.get("returnType").toString();
+        // if (!returnType.equals("base64")) {
+        //   result = "Error: Unsupported type!";
+        // }
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
         intent.putExtra("type", "encryptUsingCryptoKey");
         intent.putExtra("uuid", uuid);
-        if (!returnType.equals("base64")) {
-          intent.putExtra("result", result);
-        } else {
-          intent.putExtra("result","Error: Unsupported type!");
-        }
+        intent.putExtra("cryptoKey", base64CryptoKey);
+        intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"encryptUsingCryptoKey", "result");
+        returnError(returnResult, "encryptUsingCryptoKey", "invalid JSON", "result");
       }
     }
   }
@@ -457,19 +643,22 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func decryptUsingCryptoKey(ciphertext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
   public class DecryptUsingCryptoKey extends CallBaseTypes {
-
     private String paramStr = "";
+    private String base64CryptoKey;
 
     // Required for polymorphism
     public DecryptUsingCryptoKey() {}
 
     public DecryptUsingCryptoKey(String ciphertext, String base64CryptoKey) {
+      this.base64CryptoKey = base64CryptoKey;
       paramStr = "";
       paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
       paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
       paramStr += "\"returnType\":\"base64\"";
     }
     public DecryptUsingCryptoKey(String ciphertext, String base64CryptoKey, String returnType) {
+      this.base64CryptoKey = base64CryptoKey;
+      paramStr = "";
       paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
       paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
       paramStr += "\"returnType\":\"" + returnType + "\"";
@@ -484,23 +673,25 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CRYPT_KEY_DECRYPT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CRYPT_KEY_DECRYPT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
         String result = jsonReturnResultObject.get("result").toString();
-        String returnType = jsonReturnResultObject.get("result").toString();
+        Log.i("D_SDK_CRYPT_KEY_DECRYPT", "called():result:" + result);
+        // TODO returnType is missing?
+        // String returnType = jsonReturnResultObject.get("returnType").toString();
+        // if (!returnType.equals("base64")) {
+        //   result = "Error: Unsupported type!";
+        // }
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
         intent.putExtra("type", "decryptUsingCryptoKey");
         intent.putExtra("uuid", uuid);
-        if (returnType.equals("base64")) {
-          intent.putExtra("result", result);
-        } else {
-          intent.putExtra("result","Error: Unsupported type!");
-        }
+        intent.putExtra("cryptoKey", base64CryptoKey);
+        intent.putExtra("result", convertBase64ToString(result));
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"decryptUsingCryptoKey", "result");
+        returnError(returnResult, "decryptUsingCryptoKey", "invalid JSON", "result");
       }
     }
   }
@@ -577,7 +768,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CREATE_ACTION", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CREATE_ACTION", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -673,7 +864,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CREATE_HMAC", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CREATE_HMAC", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -781,7 +972,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_VERIFY_HMAC", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_VERIFY_HMAC", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -873,7 +1064,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CREATE_SIG", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CREATE_SIG", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -993,7 +1184,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_VERIFY_HMAC", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_VERIFY_HMAC", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1054,7 +1245,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CREATE_CERT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CREATE_CERT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1112,7 +1303,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_GET_CERTS", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_GET_CERTS", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1177,7 +1368,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_PROVE_CERT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_PROVE_CERT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1250,7 +1441,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_SUBMIT_DIRECT_TX", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_SUBMIT_DIRECT_TX", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1370,7 +1561,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CREATE_ACTION", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CREATE_ACTION", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1412,7 +1603,7 @@ public class SDKActivity extends AppCompatActivity {
     }
 
     public void called(String returnResult) {
-      Log.i("WEBVIEW_GET_VERSION", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_GET_VERSION", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1472,7 +1663,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CREATE_PUSH_DROP", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CREATE_PUSH_DROP", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1533,7 +1724,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_PARA_REQUEST", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_PARA_REQUEST", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1598,7 +1789,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_PARA_REQUEST", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_PARA_REQUEST", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1658,7 +1849,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_NEW_AUTHRITE", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_NEW_AUTHRITE", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1711,7 +1902,7 @@ public class SDKActivity extends AppCompatActivity {
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("WEBVIEW_CREATE_OUTPUT_SCRIPT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_CREATE_OUTPUT_SCRIPT", "called():returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
@@ -1814,14 +2005,22 @@ public class SDKActivity extends AppCompatActivity {
     }
     return "Error";
   }
+  public static String convertBase64ToString(String codedStr){
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      Log.i("D_SDK", "convertBase64ToString()");
+      byte[] decodedStr = Base64.getUrlDecoder().decode(codedStr);
+      return new String(decodedStr);
+    }
+    return "";
+  }
   public void doJavaScript(WebView webview, String javascript) {
-    Log.i("WEBVIEW_JAVASCRIPT", "doJavaScript():javascript:" + javascript);
+    Log.i("D_SDK", "doJavaScript():javascript:" + javascript);
     webview.evaluateJavascript(javascript, null);
   }
 
   // Generic 'run' command
-  public void runCommand(CallBaseTypes type, String uuid) {
-    callTypes.update(type);
+  public void runCommand(CallBaseTypes type, String uuid, String actualType, String portal) {
+    callTypes.update(type, actualType, portal);
     doJavaScript(
       webview,
       "window.postMessage(" + callTypes.caller().replace("uuid", uuid) + ")"
@@ -1889,46 +2088,88 @@ public class SDKActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    getSupportActionBar().hide();
     Intent intent = getIntent();
     String type = intent.getStringExtra("type");
-    if (!type.equals("waitForAuthenticated")) {
+    String portal = intent.getStringExtra("portal");
+    Log.i("D_SDK", "onCreate():type:" + type);
+    Log.i("D_SDK", "onCreate():portal:" + portal);
+    String url = intent.getStringExtra("url");
+    // Log.i("D_SDK", "url:" + url);
+    // if (!type.equals("desktop")) {
+    if (type.equals("desktop") || type.equals("waitForAuthentication") || portal.equals("openBabbage") || portal.equals("waitForAuthentication")) {
+      Log.i("D_SDK", "onCreate():display Webview");
+    } else {
+      Log.i("D_SDK", "onCreate():display App");
       finish();
     }
     callTypes = new CallTypes();
     setContentView(R.layout.activity_sdk);
     webview = findViewById(R.id.web_html);
-    webview.setWebViewClient(
+    webview.setWebChromeClient (
+      new WebChromeClient() {
+        @Override
+        public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+          Log.i("D_SDK", "onJsConfirm():result:" + result);
+          return super.onJsConfirm(view, url, message, result);
+        }
+        @Override
+        public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+          Log.i("D_SDK", "onJsAlert():result" + result);
+          return super.onJsAlert(view, url, message, result);
+        }
+      }
+    );
+    webview.setWebViewClient (
       new WebViewClient() {
         @Override
         public void onPageFinished(WebView view, String url) {
           super.onPageFinished(view, url);
+          String waitingType = "";
           uuid = intent.getStringExtra("uuid");
-          if (type.equals("isAuthenticated")) {
-            runCommand(new IsAuthenticated(), uuid);
-          }
-          if (type.equals("waitForAuthenticated")) {
-            runCommand(new WaitForAuthenticated(), uuid);
-          }
-          String callingClass = intent.getStringExtra("callingClass");
-          byte[] bytes = decode(
-            callingClass,
-            DEFAULT
-          );
-          try {
-            classObject = convertFromBytes(bytes);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+          if (!type.equals("desktop")) {
+            if (type.equals("waitForAuthentication")) {
+              runCommand(new WaitForAuthentication(), uuid, type, portal);
+            }
+            if (portal.equals("waitForAuthentication")) {
+              runCommand(new WaitForAuthentication(), uuid, type, "");
+            }
+            if (type.equals("isAuthenticated")) {
+              runCommand(new IsAuthenticated(), uuid, type, portal);
+            }
+            String callingClass = intent.getStringExtra("callingClass");
+            byte[] bytes = decode(
+              callingClass,
+              DEFAULT
+            );
+            try {
+              classObject = convertFromBytes(bytes);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            } catch (ClassNotFoundException e) {
+              throw new RuntimeException(e);
+            }
           }
           if (type.equals("encrypt")) {
-            waitingCallType.push(
-              new Encrypt(
-                intent.getStringExtra("plaintext"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID")
-              )
-            );
+            String returnType = intent.getStringExtra("returnType");
+            if (returnType == null) {
+              waitingCallType.push(
+                new Encrypt(
+                  intent.getStringExtra("plaintext"),
+                  intent.getStringExtra("protocolID"),
+                  intent.getStringExtra("keyID")
+                )
+              );
+            } else {
+              waitingCallType.push(
+                new Encrypt(
+                  intent.getStringExtra("plaintext"),
+                  intent.getStringExtra("protocolID"),
+                  intent.getStringExtra("keyID"),
+                  returnType
+                )
+              );
+            }
           }
           if (type.equals("decrypt")) {
             waitingCallType.push(
@@ -1939,12 +2180,14 @@ public class SDKActivity extends AppCompatActivity {
               )
             );
           }
-          if (type.equals("generateCryptoKey")) {
-            waitingCallType.push(new GenerateCryptoKey());
+          if (type.equals("generateAES256GCMCryptoKey")) {
+            Log.i("D_SDK", "push GenerateAES256GCMCryptoKey()");
+            waitingCallType.push(new GenerateAES256GCMCryptoKey());
           }
           if (type.equals("encryptUsingCryptoKey")) {
+            // Log.i("D_SDK_ENCRYPT_KEY", "push EncryptUsingCryptoKey()");
             String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
-            if (!isBase64(base64CryptoKey)){
+            if (!isBase64(base64CryptoKey)) {
               returnError(base64CryptoKey, "encryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
             }
             waitingCallType.push(
@@ -1956,8 +2199,9 @@ public class SDKActivity extends AppCompatActivity {
             );
           }
           if (type.equals("decryptUsingCryptoKey")) {
+            // Log.i("D_SDK", "push DecryptUsingCryptoKey()");
             String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
-            if (!isBase64(base64CryptoKey)){
+            if (!isBase64(base64CryptoKey)) {
               returnError(base64CryptoKey, "decryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
             }
             waitingCallType.push(
@@ -2001,7 +2245,7 @@ public class SDKActivity extends AppCompatActivity {
                 intent.getStringExtra("description"),
                 intent.getStringExtra("counterparty"),
                 intent.getStringExtra("privileged")
-                )
+              )
             );
           }
           if (type.equals("createSignature")) {
@@ -2045,7 +2289,7 @@ public class SDKActivity extends AppCompatActivity {
               new GetCertificates(
                 intent.getStringExtra("certifiers"),
                 intent.getStringExtra("types")
-               )
+              )
             );
           }
           if (type.equals("proveCertificate")) {
@@ -2128,11 +2372,17 @@ public class SDKActivity extends AppCompatActivity {
               )
             );
           }
-          waitingCallType.push(new IsAuthenticated());
-
-          // Need to start the child thread to call IsAuthenticated run command
-          WorkerThread workerThread = new WorkerThread();
-          workerThread.start();
+          if (!type.equals("waitForAuthentication") && !type.equals("desktop") && !portal.equals("waitForAuthentication")) {
+            if (portal.equals("openBabbage")) {
+              waitingCallType.push(waitingCallType.get(0));
+            } else {
+              waitingCallType.push(new IsAuthenticated());
+            }
+            Log.i("D_SDK_STACK", "waitingCallTypes:" + waitingCallType);
+            // Need to start the child thread to call IsAuthenticated run command
+            WorkerThread workerThread = new WorkerThread();
+            workerThread.start();
+          }
         }
       }
     );
@@ -2141,19 +2391,18 @@ public class SDKActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
           if (msg.what == 1) {
-            runCommand(waitingCallType.pop(), uuid);
+            runCommand(waitingCallType.pop(), uuid, type, portal);
           }
         }
       };
+
     // required for most of our React modules (Hades, Prosperity etc.)
     webview.getSettings().setDomStorageEnabled(true);
     webview.getSettings().setJavaScriptEnabled(true);
+    webview.getSettings().setSupportMultipleWindows(true);
+    webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
     webview.getSettings().setUserAgentString("babbage-webview-inlay");
-    webview.addJavascriptInterface(
-      new WebAppInterface(),
-      "androidMessageHandler"
-    );
-    // webview.loadUrl("http://192.168.1.144:3000");
-    webview.loadUrl("https://staging-mobile-portal.babbage.systems");
+    webview.addJavascriptInterface(new WebAppInterface(),"androidMessageHandler");
+    webview.loadUrl(url);
   }
 }
