@@ -1,11 +1,13 @@
 package com.example.sdk;
 
+import com.example.sdk.SDKActivity;
 import static org.apache.commons.codec.binary.Base64.isBase64;
 import static android.util.Base64.DEFAULT;
 import static android.util.Base64.decode;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -42,6 +44,9 @@ import org.json.JSONObject;
 // TODO team view what is happening on a physical device
 
 public class SDKActivity extends AppCompatActivity {
+  private static String counterparty = "";
+  private static boolean pageFinished = false;
+  private static boolean openBabbage = false;
   private static String URL = "https://staging-mobile-portal.babbage.systems";
   private Object classObject; // Used for Intent callback
   private WebView webview;
@@ -49,36 +54,161 @@ public class SDKActivity extends AppCompatActivity {
   private Stack<CallBaseTypes> waitingCallType = new Stack<CallBaseTypes>(); // Stores the waiting call type while authentication is performed
   private Handler mainThreadHandler; // Needed to keep run commands calls in a queue
   private String uuid = ""; // Has to be available to run the queued run command
+  private static String identityKey = ""; //
 
-  /*** API ***/
+  /*** High-level API Middleware ***/
   public static class ProcessedResult {
     public static String callType = "";
     public static String portal = "";
+    public static String state = "";
 
     public ProcessedResult() {
       callType = "";
       portal = "";
     }
   }
-  public static Intent desktop(Context activityContext, Object instance) {
-    Log.i("D_SDK", "desktop()");
+  public static Intent encrypt(Context activityContext, Object instance, TextView messageText) {
+    return encrypt(activityContext, instance, messageText, "self", "");
+  }
+  public static Intent encrypt(Context activityContext, Object instance, TextView messageText, String counterparty, String portal) {
+    SDKActivity.counterparty = counterparty;
+    Log.i("D_SDK_DECRYPT", "encrypt():returnResult:counterparty=" + counterparty);
+    Log.i("D_SDK", "encrypt():portal:" + portal);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", passActivity(instance));
-    intent.putExtra("type", "desktop");
+    intent.putExtra("portal", portal);
+    intent.putExtra("type", "encrypt");
+    intent.putExtra("uuid", UUID.randomUUID().toString());
+    intent.putExtra("plaintext", messageText.getText().toString());
+    intent.putExtra("protocolID", "crypton");
+    intent.putExtra("keyID", "1");
+    intent.putExtra("counterparty", counterparty);
+    intent.putExtra("returnType", "string");
     intent.putExtra("url", URL);
     return intent;
   }
+  public static Intent decrypt(Context activityContext, Object instance, TextView cipherText) {
+    return decrypt(activityContext, instance, cipherText, "self", "");
+  }
+  public static Intent decrypt(Context activityContext, Object instance, TextView cipherText, String counterparty, String portal) {
+    Log.i("D_SDK", "decrypt():portal:" + portal);
+    SDKActivity.counterparty = counterparty;
+    Log.i("D_SDK_INTENT_DECRYPT", "decrypt():counterparty=" + counterparty);
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("portal", portal);
+    intent.putExtra("type", "decrypt");
+    intent.putExtra("uuid", UUID.randomUUID().toString());
+    intent.putExtra("ciphertext", cipherText.getText().toString());
+    intent.putExtra("protocolID", "crypton");
+    intent.putExtra("keyID", "1");
+    intent.putExtra("counterparty", counterparty);
+    intent.putExtra("returnType", "string");
+    intent.putExtra("url", URL);
+    return intent;
+  }
+  public static Intent portal(Context activityContext, Object instance) {
+    Log.i("D_SDK", "portal()");
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("type", "portal");
+    intent.putExtra("url", URL);
+    return intent;
+  }
+  public static ProcessedResult processResult(Context activityContext, Object instance, Intent intent, EditText messageText) {
+    ProcessedResult processedResult = new ProcessedResult();
+    String result = intent.getStringExtra("result");
+    Log.i("D_SDK", "processResult():result:" + result);
+    String type = "";
+    if (result != null) {
+      String error = intent.getStringExtra("error");
+      type = intent.getStringExtra("type");
+      Log.i("D_SDK", "processResult():first type:" + type);
+      if (error != null) {
+        String field = intent.getStringExtra("field");
+        String str = "processResult():call type:" + type + ",field:" + field + ",error:" + error;
+        Log.i("D_SDK_ERROR", str);
+        Toast.makeText(activityContext, str, Toast.LENGTH_LONG).show();
+        type = "";
+      }
+      String uuid = intent.getStringExtra("uuid");
+      if (result.equals("openBabbage")) {
+        Log.i("D_SDK", "processResult():result=\"openBabbage\"");
+        processedResult.callType =  type;
+        processedResult.portal = "openBabbage";
+        type = "";
+      }
+
+      // If not authenticated Babbage Portal is displayed and user must register
+      // for an account. Wait for authentication
+      Log.i("D_SDK", "processResult():second type:" + type);
+      if (type.equals("isAuthenticated")) {
+        if (result.equals("false")) {
+          Log.i("D_SDK", "processResult():call waitForAuthentication");
+          String waitingType = intent.getStringExtra("waitingType");
+          Log.i("D_SDK", "processResult():waitingType:" + waitingType);
+          ProcessedResult.callType = waitingType;
+          ProcessedResult.portal = "waitForAuthentication";
+        }
+      }
+
+      // Process returned value
+      if (type.equals("encrypt")) {
+        Log.i("D_SDK", "processResult():encrypt set text");
+        messageText.setText(result);
+        ProcessedResult.state = "encrypted";
+      }
+      if (type.equals("decrypt")) {
+        Log.i("D_SDK", "processResult():decrypt set text");
+        messageText.setText(result);
+        ProcessedResult.state = "decrypted";
+      }
+    }
+    Log.i("D_SDK", "processResult():callType:" + processedResult.callType + ",portal:" + processedResult.portal);
+    return processedResult;
+  }
   public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance) {
+    Log.i("D_SDK", "intent generateAES256GCMCryptoKey()");
     return generateAES256GCMCryptoKey(activityContext, instance, "");
   }
   public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance, String portal) {
-    Log.i("D_SDK", "generateAES256GCMCryptoKey():portal:" + portal);
+    Log.i("D_SDK", "generateAES256GCMCryptoKey():portal:0" + portal);
     Intent intent = new Intent(activityContext, SDKActivity.class);
+    Log.i("D_SDK", "generateAES256GCMCryptoKey():portal:1");
     intent.putExtra("callingClass", passActivity(instance));
+    Log.i("D_SDK", "generateAES256GCMCryptoKey():portal:2");
     intent.putExtra("portal", portal);
     intent.putExtra("type", "generateAES256GCMCryptoKey");
     intent.putExtra("uuid", UUID.randomUUID().toString());
     intent.putExtra("url", URL);
+    return intent;
+  }
+  public static Intent openPortal(Context activityContext, Object instance) {
+    return openPortal(activityContext, instance, "");
+  }
+  public static Intent openPortal(Context activityContext, Object instance, String portal) {
+    Log.i("D_SDK", "openPortal():portal:" + portal);
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("portal", portal);
+    intent.putExtra("type", "portal");
+    intent.putExtra("uuid", UUID.randomUUID().toString());
+    intent.putExtra("url", URL);
+    return intent;
+  }
+  public static Intent getIdentityKey(Context activityContext, Object instance) {
+    Log.i("D_SDK", "getIdentityKey():constructor()");
+    return getIdentityKey(activityContext, instance, "");
+  }
+  public static Intent getIdentityKey(Context activityContext, Object instance, String portal) {
+    Log.i("D_SDK", "getIdentityKey():portal:" + portal);
+    Intent intent = new Intent(activityContext, SDKActivity.class);
+    intent.putExtra("callingClass", passActivity(instance));
+    intent.putExtra("portal", portal);
+    intent.putExtra("type", "getIdentityKey");
+    intent.putExtra("uuid", UUID.randomUUID().toString());
+    intent.putExtra("url", URL);
+    intent.putExtra("key", identityKey);
     return intent;
   }
   public static Intent encryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText) {
@@ -132,16 +262,19 @@ public class SDKActivity extends AppCompatActivity {
       String uuid = intent.getStringExtra("uuid");
       if (result.equals("openBabbage")) {
         Log.i("D_SDK", "processResult():result=\"openBabbage\"");
-        if (type.equals("encryptUsingCryptoKey")) {
-          processedResult.callType =  "encryptUsingCryptoKey";
-          processedResult.portal = "openBabbage";
-        }
+        processedResult.callType =  type;
+        processedResult.portal = "openBabbage";
         type = "";
       }
 
-      // If not authenticated Babbage Desktop is displayed and user must register
-      // for an account. Wait for authentication
+      // If not authenticated Babbage Portal is displayed and the user must register for an account. We then wait for authentication
       Log.i("D_SDK", "processResult():second type:" + type);
+      if (type.equals("getPublicKey")) {
+          Log.i("D_SDK", "processResult():call getPublicKey");
+          ProcessedResult.callType = type;
+          ProcessedResult.portal = "";
+          processedResult.state = result;
+      }
       if (type.equals("isAuthenticated")) {
         if (result.equals("false")) {
           Log.i("D_SDK", "processResult():call waitForAuthentication");
@@ -163,20 +296,23 @@ public class SDKActivity extends AppCompatActivity {
         messageText.setText(result);
         String cryptoKey = intent.getStringExtra("cryptoKey");
         cryptoKeyText.setText(cryptoKey);
+        processedResult.state = "encrypted";
       }
       if (type.equals("decryptUsingCryptoKey")) {
         Log.i("D_SDK", "processResult():decryptUsingCryptoKey set text");
         messageText.setText(result);
         String cryptoKey = intent.getStringExtra("cryptoKey");
         cryptoKeyText.setText(cryptoKey);
+        processedResult.state = "decrypted";
       }
     }
+    Log.i("D_SDK", "processResult():state:" + processedResult.state + ",portal:" + processedResult.portal);
     Log.i("D_SDK", "processResult():callType:" + processedResult.callType + ",portal:" + processedResult.portal);
     return processedResult;
   }
-  /*** API ***/
+  /*** High-level API Middleware ***/
 
-  // This is required due to Android restrictions placed on webview
+  // This is required due to Android restrictions placed on Webview
   // All run commands have to be placed in a queue (except authentication commands)
   // Because we check for user authentication before any command is run, we have to use the queue
   private class WorkerThread extends Thread {
@@ -186,7 +322,7 @@ public class SDKActivity extends AppCompatActivity {
       // Create a message in child thread.
       Message childThreadMessage = new Message();
       childThreadMessage.what = 1;
-      // Put the message in webview thread message queue.
+      // Put the message in Webview thread message queue.
       mainThreadHandler.sendMessage(childThreadMessage);
     }
   }
@@ -199,7 +335,6 @@ public class SDKActivity extends AppCompatActivity {
   }
 
   class CallTypes extends CallBaseTypes {
-
     public CallBaseTypes type;
     public String actualType;
     public String portal;
@@ -211,16 +346,15 @@ public class SDKActivity extends AppCompatActivity {
       this.actualType = actualType;
       this.portal = portal;
     }
-
     public String caller() {
       return type.caller();
     }
-
     public void called(String returnResult) {
       type.called(returnResult);
     }
   }
 
+  // portal callbacks defined
   public class WebAppInterface {
 
     public CallBaseTypes type = null;
@@ -233,20 +367,41 @@ public class SDKActivity extends AppCompatActivity {
     @JavascriptInterface
     public void openBabbage() {
       Log.i("D_SDK_INTERFACE", "called openBabbage():callTypes.type:" + callTypes.actualType);
+      Log.i("D_SDK_INTERFACE", "called openBabbage():callTypes.portal:" + callTypes.portal);
+      Intent intent = new Intent(SDKActivity.this, SDKActivity.class);
+      intent.putExtra("callingClass", classObject.getClass());
+      intent.putExtra("portal","portal");
+      intent.putExtra("type", callTypes.actualType);
+      intent.putExtra("uuid", UUID.randomUUID().toString());
+      intent.putExtra("url", URL);
+      Log.i("D_SDK_INTERFACE", "called openBabbage():startActivity(intent)");
+      startActivity(intent);
+      //return intent;
+      //openBabbage = true;
+      /*
       if (!callTypes.portal.equals("openBabbage")) {
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
-        intent.putExtra("result", "openBabbage");
+        //intent.putExtra("result", "openBabbage");
         intent.putExtra("type", callTypes.actualType);
         intent.putExtra("uuid", uuid);
         startActivity(intent);
       } else {
-        Log.i("D_SDK_INTERFACE", "called openBabbage():already done");
-        callTypes.portal = "";
+        Log.i("D_SDK_INTERFACE", "called openBabbage():already done:waitingCallType:" + waitingCallType);
+        // Remove any queued commands
+        if (!waitingCallType.isEmpty()) {
+          waitingCallType.pop();
+        }
       }
+      */
     }
     @JavascriptInterface
     public void closeBabbage() {
       Log.i("D_SDK_INTERFACE", "called closeBabbage():waitingCallType:" + waitingCallType);
+      if (waitingCallType.isEmpty()) {
+        Log.i("D_SDK_INTERFACE", "called closeBabbage():finish()");
+        finish();
+      }
+      // Process the waiting command(s)
       WorkerThread workerThread = new WorkerThread();
       workerThread.start();
     }
@@ -343,9 +498,7 @@ public class SDKActivity extends AppCompatActivity {
       callTypes.called(returnResult);
     }
     @JavascriptInterface
-    public void createOutputScriptFromPubKey(String returnResult) {
-      callTypes.called(returnResult);
-    }
+    public void createOutputScriptFromPubKey(String returnResult) { callTypes.called(returnResult); }
   }
 
   public class IsAuthenticated extends CallBaseTypes {
@@ -353,11 +506,13 @@ public class SDKActivity extends AppCompatActivity {
     public String caller() {
       return "{\"type\":\"CWI\",\"call\":\"isAuthenticated\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
     }
-
     public void called(String returnResult) {
       String result = "";
       try {
         Log.i("D_SDK_AUTH", "called():returnResult:" + returnResult);
+        returnResult = returnResult.replaceAll(":true,", ":\"true\",");
+        returnResult = returnResult.replaceAll(":false,", ":\"false\",");
+        Log.i("D_SDK_AUTH", "called():after replace returnResult:" + returnResult);
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
         String uuid = jsonReturnResultObject.get("uuid").toString();
         result = (String)jsonReturnResultObject.get("result").toString();
@@ -375,6 +530,7 @@ public class SDKActivity extends AppCompatActivity {
       }
       if (!waitingCallType.isEmpty() && !result.equals("false")) {
         Log.i("D_SDK_AUTH", "called():run next command");
+        Log.i("D_SDK_AUTH", "called():waitingCallType=" + waitingCallType);
         // Need to start the child thread to call the waiting run command
         WorkerThread workerThread = new WorkerThread();
         workerThread.start();
@@ -387,7 +543,6 @@ public class SDKActivity extends AppCompatActivity {
     public String caller() {
       return "{\"type\":\"CWI\",\"call\":\"waitForAuthentication\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
     }
-
     public void called(String returnResult) {
       Log.i("D_SDK_WAIT_AUTHED", "called()");
       finish();
@@ -400,29 +555,66 @@ public class SDKActivity extends AppCompatActivity {
       }
     }
   }
+  /*
+  @available(iOS 15.0, *)
+  public func encrypt(plaintext: String, protocolID: JSON, keyID: String, counterparty: String? = "self") async throws -> String {
+
+    // Convert the string to a base64 string
+    let base64Encoded = convertStringToBase64(data: plaintext)
+
+    // Construct the expected command to send
+    var cmd:JSON = [
+    "type":"CWI",
+            "call":"encrypt",
+            "params": [
+    "plaintext": convertToJSONString(param: base64Encoded),
+    "protocolID": protocolID,
+            "keyID": convertToJSONString(param: keyID),
+    "counterparty": convertToJSONString(param: counterparty!),
+    "returnType": "string"
+            ]
+        ]
+
+    // Run the command and get the response JSON object
+    var responseObject:JSON = []
+    do {
+      responseObject = try await runCommand(cmd: &cmd).value
+    } catch {
+      throw error
+    }
+
+    // Pull out the expect result string
+    let encryptedText:String = (responseObject.objectValue?["result"]?.stringValue)!
+    return encryptedText
+  }
+  */
+  //public func encrypt(plaintext: String, protocolID: JSON, keyID: String, counterparty: String? = "self") async throws -> String {
 
   public class Encrypt extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public Encrypt() {}
 
+    // Default values enforced by overloading constructor
     public Encrypt(String plaintext, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\"";
-      // paramStr += "\"returnType\":\"string\"";
+      paramStr += "\"counterparty\":\"self\",";
+      paramStr += "\"returnType\":\"string\"";
     }
-    public Encrypt(String plaintext, String protocolID, String keyID, String returnType) {
+    public Encrypt(String plaintext, String protocolID, String keyID, String counterparty) {
+      Log.i("D_SDK_ENCRYPT", "Encrypt():plaintext=" + plaintext);
+      Log.i("D_SDK_ENCRYPT", "Encrypt():base64 plaintext=" + convertStringToBase64(plaintext));
       paramStr = "";
       paramStr += "\"plaintext\":\"" + convertStringToBase64(plaintext) + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"returnType\":\"" + returnType + "\"";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"returnType\":\"string\"";
     }
-
     public String caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
@@ -434,7 +626,6 @@ public class SDKActivity extends AppCompatActivity {
       cmdJSONString += "}";
       return cmdJSONString;
     }
-
     public void called(String returnResult) {
       Log.i("D_SDK_ENCRYPT", "called():returnResult:" + returnResult);
       try {
@@ -445,29 +636,69 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("type", "encrypt");
         intent.putExtra("uuid", uuid);
         intent.putExtra("result", result);
+        intent.putExtra("counterparty", counterparty);
         startActivity(intent);
       } catch (JSONException e) {
         returnError(returnResult, "encrypt", "invalid JSON", "result");
       }
     }
   }
+  /*
+  // Encrypts data using CWI.decrypt
+  @available(iOS 15.0, *)
+  public func decrypt(ciphertext: String, protocolID: JSON, keyID: String, counterparty: String? = "self") async throws -> String {
+      // Construct the expected command to send
+      var cmd:JSON = [
+          "type":"CWI",
+          "call":"decrypt",
+          "params": [
+              "ciphertext": convertToJSONString(param: ciphertext),
+              "protocolID": protocolID,
+              "keyID": convertToJSONString(param: keyID),
+              "counterparty": convertToJSONString(param: counterparty!),
+              "returnType": "string"
+          ]
+      ]
 
+      // Run the command and get the response JSON object
+      var responseObject:JSON = []
+      do {
+          responseObject = try await runCommand(cmd: &cmd).value
+      } catch {
+          throw error
+      }
+
+      // Pull out the expect result string
+      let decryptedText:String = (responseObject.objectValue?["result"]?.stringValue)!
+      return decryptedText
+  }
+  */
+  // public func decrypt(ciphertext: String, protocolID: JSON, keyID: String, counterparty: String? = "self") async throws -> String {
   public class Decrypt extends CallBaseTypes {
-
     private String paramStr;
 
     // Required for polymorphism
     public Decrypt() {}
 
+    // Default values enforced by overloading constructor
     public Decrypt(String ciphertext, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"counterparty\":\"self\",";
       paramStr += "\"returnType\":\"string\"";
     }
-
+    public Decrypt(String ciphertext, String protocolID, String keyID, String counterparty) {
+      paramStr = "";
+      paramStr += "\"ciphertext\":\"" + ciphertext + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      paramStr += "\"keyID\":\"" + keyID + "\",";
+      paramStr += "\"counterparty\":\"" + counterparty + "\",";
+      paramStr += "\"returnType\":\"string\"";
+    }
     public String caller() {
+      Log.i("D_SDK_DECRYPT", "caller():returnResult:counterparty=" + counterparty);
       String cmdJSONString = "";
       cmdJSONString += "{\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"decrypt\",";
@@ -478,7 +709,6 @@ public class SDKActivity extends AppCompatActivity {
       cmdJSONString += "}";
       return cmdJSONString;
     }
-
     public void called(String returnResult) {
       Log.i("D_SDK_DECRYPT", "called():returnResult:" + returnResult);
       try {
@@ -489,6 +719,8 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("type", "decrypt");
         intent.putExtra("uuid", uuid);
         intent.putExtra("result", result);
+        Log.i("D_SDK_DECRYPT", "called():returnResult:counterparty=" + counterparty);
+        intent.putExtra("counterparty", counterparty);
         startActivity(intent);
       } catch (JSONException e) {
         returnError(returnResult, "decrypt", "invalid JSON", "result");
@@ -514,28 +746,70 @@ public class SDKActivity extends AppCompatActivity {
     return cryptoKey
   }
   */
+  // public func generateAES256GCMCryptoKey() async -> String {
   public class GenerateAES256GCMCryptoKey extends CallBaseTypes {
 
     public String caller() {
+      Log.i("D_SDK_GEN_CRYPT", "caller()");
       return "{\"type\":\"CWI\",\"call\":\"generateAES256GCMCryptoKey\",\"params\":{},\"id\":\"uuid\"}";
     }
-
     public void called(String returnResult) {
-      Log.i("D_SDK_GEN_CRYPT", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_GEN_CRYPT", " >called():returnResult:" + returnResult);
+      JSONObject jsonReturnResultObject = null;
+      // String result = "";
       try {
-        JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        jsonReturnResultObject = new JSONObject(returnResult);
+        Log.i("D_SDK_GEN_CRYPT", "  called():jsonReturnResultObject=" + jsonReturnResultObject);
+        /*
+        if (jsonReturnResultObject.get("code").equals("ERR_UNKNOWN")) {
+          // returnError(returnResult,"generateAES256GCMCryptoKey", "invalid JSON", "result");
+          Log.i("D_SDK_GEN_CRYPT", "  called():12");
+          String result = jsonReturnResultObject.get("result").toString();
+          Log.i("D_SDK_GEN_CRYPT", "  called():13");
+          Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+          Log.i("D_SDK_GEN_CRYPT", "  called():14");
+          intent.putExtra("type", "generateAES256GCMCryptoKey");
+          Log.i("D_SDK_GEN_CRYPT", "  called():15");
+          intent.putExtra("uuid", uuid);
+          Log.i("D_SDK_GEN_CRYPT", "  called():16");
+          intent.putExtra("result", result);
+          Log.i("D_SDK_GEN_CRYPT", "called():return:intent=" + intent);
+          startActivity(intent);
+          //return;
+        }
+        */
         String uuid = jsonReturnResultObject.get("uuid").toString();
+        Log.i("D_SDK_GEN_CRYPT", "  called():2");
         String result = jsonReturnResultObject.get("result").toString();
+        Log.i("D_SDK_GEN_CRYPT", "  called():result=" + result);
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        Log.i("D_SDK_GEN_CRYPT", "  called():4");
         intent.putExtra("type", "generateAES256GCMCryptoKey");
+        Log.i("D_SDK_GEN_CRYPT", "  called():5");
         intent.putExtra("uuid", uuid);
+        Log.i("D_SDK_GEN_CRYPT", "  called():6");
         intent.putExtra("result", result);
+        Log.i("D_SDK_GEN_CRYPT", "called():return:intent=" + intent);
         startActivity(intent);
       } catch (JSONException e) {
-        returnError(returnResult,"generateAES256GCMCryptoKey", "invalid JSON", "result");
+        Log.i("D_SDK_GEN_CRYPT", "called():error:" + e);
+        // String result = jsonReturnResultObject.get("result").toString();
+        // returnError(returnResult,"generateAES256GCMCryptoKey", "invalid JSON", "result");
+        Log.i("D_SDK_GEN_CRYPT", "  called():2");
+        Log.i("D_SDK_GEN_CRYPT", "  called():3");
+        Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        Log.i("D_SDK_GEN_CRYPT", "  called():4");
+        intent.putExtra("type", "generateAES256GCMCryptoKey");
+        Log.i("D_SDK_GEN_CRYPT", "  called():5");
+        intent.putExtra("uuid", uuid);
+        Log.i("D_SDK_GEN_CRYPT", "  called():6");
+        intent.putExtra("result", "");
+        Log.i("D_SDK_GEN_CRYPT", "called():return:intent=" + intent);
+        startActivity(intent);
       }
+      Log.i("D_SDK_GEN_CRYPT", " <called()");
     }
-  }
+   }
 
   /*
   @available(iOS 15.0, *)
@@ -562,6 +836,8 @@ public class SDKActivity extends AppCompatActivity {
     return "Error: Unsupported type!"
   }
   */
+  // public func encryptUsingCryptoKey(plaintext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
+  // Default values enforced by overloading constructor
   public class EncryptUsingCryptoKey extends CallBaseTypes {
     private String paramStr;
     private String base64CryptoKey;
@@ -569,6 +845,7 @@ public class SDKActivity extends AppCompatActivity {
     // Required for polymorphism
     public EncryptUsingCryptoKey() {}
 
+    // Default values enforced by overloading constructor
     public EncryptUsingCryptoKey(String plaintext, String base64CryptoKey) {
       this.base64CryptoKey = base64CryptoKey;
       paramStr = "";
@@ -649,6 +926,7 @@ public class SDKActivity extends AppCompatActivity {
     // Required for polymorphism
     public DecryptUsingCryptoKey() {}
 
+    // Default values enforced by overloading constructor
     public DecryptUsingCryptoKey(String ciphertext, String base64CryptoKey) {
       this.base64CryptoKey = base64CryptoKey;
       paramStr = "";
@@ -725,7 +1003,6 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func createAction(inputs: JSON? = nil, outputs: JSON, description: String, bridges: JSON? = nil, labels: JSON? = nil) async -> JSON {
   public class CreateAction extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
@@ -779,7 +1056,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"createAction", "result");
+        returnError(returnResult, "createAction", "invalid JSON", "result");
       }
     }
   }
@@ -813,12 +1090,12 @@ public class SDKActivity extends AppCompatActivity {
   // public func createHmac(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = "self", privileged: Bool? = nil) async -> String {
   // Default values enforced by overloading constructor
   public class CreateHmac extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public CreateHmac() {}
 
+    // Default values enforced by overloading constructor
     public CreateHmac(String data, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
@@ -875,7 +1152,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"createHmac", "result");
+        returnError(returnResult, "createHmac", "invalid JSON", "result");
       }
     }
   }
@@ -919,12 +1196,12 @@ public class SDKActivity extends AppCompatActivity {
   // Default values enforced by overloading constructor
   // public func verifyHmac(data: String, hmac: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: Bool? = nil) async -> Bool {
   public class VerifyHmac extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public VerifyHmac() {}
 
+    // Default values enforced by overloading constructor
     public VerifyHmac(String data, String hmac, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
@@ -983,10 +1260,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"verifyHmac", "result");
+        returnError(returnResult, "verifyHmac", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func createSignature(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil) async -> String {
@@ -1015,12 +1293,12 @@ public class SDKActivity extends AppCompatActivity {
   //   public func createSignature(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil) async -> String {
   // Default values enforced by overloading constructor
   public class CreateSignature extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public CreateSignature() {}
 
+    // Default values enforced by overloading constructor
     public CreateSignature(String data, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"data\":\"" + convertStringToBase64(data) + "\",";
@@ -1075,7 +1353,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"createSignature", "result");
+        returnError(returnResult, "createSignature", "invalid JSON", "result");
       }
     }
   }
@@ -1120,12 +1398,12 @@ public class SDKActivity extends AppCompatActivity {
   // public func verifySignature(data: String, signature: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil, reason: String? = nil) async -> Bool{
   // Default values enforced by overloading constructor
   public class VerifySignature extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public VerifySignature() {}
 
+    // Default values enforced by overloading constructor
     public VerifySignature(String data, String signature, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"data\":\"" + checkIsBase64(data) + "\",";
@@ -1195,10 +1473,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"verifySignature", "result");
+        returnError(returnResult, "verifySignature", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func createCertificate(certificateType: String, fieldObject: JSON, certifierUrl: String, certifierPublicKey: String) async -> JSON {
@@ -1220,9 +1499,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func createCertificate(certificateType: String, fieldObject: JSON, certifierUrl: String, certifierPublicKey: String) async -> JSON {
-  // Default values enforced by overloading constructor
   public class CreateCertificate extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1256,10 +1533,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"createCertificate", "result");
+        returnError(returnResult, "createCertificate", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func getCertificates(certifiers: JSON, types: JSON) async -> JSON {
@@ -1278,11 +1556,8 @@ public class SDKActivity extends AppCompatActivity {
       return certificates
   }
   */
-
   // public func getCertificates(certifiers: JSON, types: JSON) async -> JSON {
-  // Default values enforced by overloading constructor
   public class GetCertificates extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1314,10 +1589,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"ninja.findCertificates", "result");
+        returnError(returnResult, "ninja.findCertificates", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func proveCertificate(certificate: JSON, fieldsToReveal: JSON? = nil, verifierPublicIdentityKey: String) async -> JSON {
@@ -1341,12 +1617,12 @@ public class SDKActivity extends AppCompatActivity {
   // public func proveCertificate(certificate: JSON, fieldsToReveal: JSON? = nil, verifierPublicIdentityKey: String) async -> JSON {
   // Default values enforced by overloading constructor
   public class ProveCertificate extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public ProveCertificate() {}
 
+    // Default values enforced by overloading constructor
     public ProveCertificate(String certificate, String verifierPublicIdentityKey) {
       paramStr = "";
       paramStr += "\"certificate\":\"" + checkForJSONErrorAndReturnToApp(certificate, "proveCertificate", "certificate") + "\",";
@@ -1379,10 +1655,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"proveCertificate", "result");
+        returnError(returnResult, "proveCertificate", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func submitDirectTransaction(protocolID: String, transaction: JSON, senderIdentityKey: String, note: String, amount: Int, derivationPrefix: String? = nil) async -> JSON {
@@ -1406,14 +1683,13 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   //   public func submitDirectTransaction(protocolID: String, transaction: JSON, senderIdentityKey: String, note: String, amount: Int, derivationPrefix: String? = nil) async -> JSON {
-  // Default values enforced by overloading constructor
   public class SubmitDirectTransaction extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public SubmitDirectTransaction() {}
 
+    // Default values enforced by overloading constructor
     public SubmitDirectTransaction(String protocolID, String transaction, String senderIdentityKey, String note, String amount) {
       paramStr = "";
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
@@ -1452,10 +1728,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"submitDirectTransaction", "result");
+        returnError(returnResult, "submitDirectTransaction", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func getPublicKey(protocolID: JSON?, keyID: String? = nil, priviliged: Bool? = nil, identityKey: Bool? = nil, reason: String? = nil, counterparty: String? = "self", description: String? = nil) async -> String {
@@ -1483,9 +1760,8 @@ public class SDKActivity extends AppCompatActivity {
       return publicKey
   }
   */
-  //   public func getPublicKey(protocolID: JSON?, keyID: String? = nil, privileged: Bool? = nil, identityKey: Bool? = nil, reason: String? = nil, counterparty: String? = "self", description: String? = nil) async -> String {
-  public class GetPublicKey extends CallBaseTypes {
-
+  // public func getPublicKey(protocolID: JSON?, keyID: String? = nil, privileged: Bool? = nil, identityKey: Bool? = nil, reason: String? = nil, counterparty: String? = "self", description: String? = nil) async -> String {
+   public class GetPublicKey extends CallBaseTypes {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1516,6 +1792,7 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"counterparty\":\"self\"";
     }
     public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey) {
+      Log.i("D_SDK_GET_PUBLIC_KEY", "called():identityKey=" + identityKey);
       paramStr = "";
       paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
@@ -1543,36 +1820,56 @@ public class SDKActivity extends AppCompatActivity {
     }
     public GetPublicKey(String protocolID, String keyID, String privileged, String identityKey, String reason, String counterparty, String description) {
       paramStr = "";
-      paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
+      paramStr += "\"protocolID\":\"" + protocolID + "\",";
+      //paramStr += "\"protocolID\":\"" + checkForJSONErrorAndReturnToApp(protocolID, "getPublicKey", "protocolID") + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\",";
-      paramStr += "\"privileged\":\"" + privileged + "\",";
-      paramStr += "\"identityKey\":\"" + identityKey + "\",";
+      if (privileged != null && privileged.equals("true")) {
+        paramStr += "\"privileged\":true,";
+      } else {
+        paramStr += "\"privileged\":false,";
+      }
+      if (identityKey != null && identityKey.equals("true")) {
+        paramStr += "\"identityKey\":true,";
+      } else {
+        paramStr += "\"identityKey\":false,";
+      }
       paramStr += "\"reason\":\"" + reason + "\",";
       paramStr += "\"counterparty\":\"" + counterparty + "\",";
       paramStr += "\"description\":\"" + description + "\"";
+      Log.i("D_SDK_GET_PUBLIC_KEY", "GetPublicKey():paramStr=" + paramStr);
     }
     public String caller() {
+      Log.i("D_SDK_GET_PUBLIC_KEY", "caller()");
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"getPublicKey\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
+      Log.i("D_SDK_GET_PUBLIC_KEY", "caller():cmdJSONString=" + cmdJSONString);
       return cmdJSONString;
     }
     public void called(String returnResult) {
-      Log.i("D_SDK_CREATE_ACTION", "called():returnResult:" + returnResult);
+      Log.i("D_SDK_GET_PUBLIC_KEY", "called()::returnResult:" + returnResult);
       try {
         JSONObject jsonReturnResultObject = new JSONObject(returnResult);
+        Log.i("D_SDK_GET_PUBLIC_KEY", "called():create intent");
         String uuid = jsonReturnResultObject.get("uuid").toString();
+        Log.i("D_SDK_GET_PUBLIC_KEY", "called():uuid=" + uuid);
         String result = jsonReturnResultObject.get("result").toString();
+        Log.i("D_SDK_GET_PUBLIC_KEY", "called():result=" + result);
+        // Intent intent = new Intent(SDKActivity.this, new SDKActivity.CryptonActivity.getClass());
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
+        Log.i("D_SDK_GET_PUBLIC_KEY", "called():created intent:" + intent);
         intent.putExtra("type", "getPublicKey");
         intent.putExtra("uuid", uuid);
         intent.putExtra("result", result);
+        Log.i("D_SDK_GET_PUBLIC_KEY", "called():call startActivity():intent=" + intent);
         startActivity(intent);
+        finish();
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"getPublicKey", "result");
+        Log.i("D_SDK_GET_PUBLIC_KEY", "called():ERROR raised");
+        // returnError(returnResult, "getPublicKey", "invalid JSON", "result");
       }
     }
   }
@@ -1601,7 +1898,6 @@ public class SDKActivity extends AppCompatActivity {
     public String caller() {
       return "{\"type\":\"CWI\",\"call\":\"getVersion\",\"params\":{},\"id\":\"uuid\"}";
     }
-
     public void called(String returnResult) {
       Log.i("D_SDK_GET_VERSION", "called():returnResult:" + returnResult);
       try {
@@ -1614,10 +1910,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"getVersion", "result");
+        returnError(returnResult, "generateCryptoKey", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func createPushDropScript(fields: JSON, protocolID: String, keyID: String) async -> String {
@@ -1640,13 +1937,11 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func createPushDropScript(fields: JSON, protocolID: String, keyID: String) async -> String {
   public class CreatePushDropScript extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public CreatePushDropScript() {}
 
-    // Default values enforced by overloading constructor
     public CreatePushDropScript(String fields, String protocolID, String keyID) {
       paramStr = "";
       paramStr += "\"fields\":\"" + checkForJSONErrorAndReturnToApp(fields, "createPushDropScript", "fields") + "\",";
@@ -1674,10 +1969,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"createPushDropScript", "result");
+        returnError(returnResult, "createPushDropScript", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func parapetRequest(resolvers: JSON, bridge: String, type: String, query: JSON) async -> JSON {
@@ -1700,13 +1996,11 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func parapetRequest(resolvers: JSON, bridge: String, type: String, query: JSON) async -> JSON {
   public class ParapetRequest extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public ParapetRequest() {}
 
-    // Default values enforced by overloading constructor
     public ParapetRequest(String resolvers, String bridge, String type, String query) {
       paramStr = "";
       paramStr += "\"resolvers\":\"" + checkForJSONErrorAndReturnToApp(resolvers, "parapetRequest", "resolvers") + "\",";
@@ -1735,10 +2029,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"parapetRequest", "result");
+        returnError(returnResult, "parapetRequest", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func downloadUHRPFile(URL: String, bridgeportResolvers: JSON) async -> Data? {
@@ -1767,13 +2062,11 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func downloadUHRPFile(URL: String, bridgeportResolvers: JSON) async -> Data? {
   public class DownloadUHRPFile extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
     public DownloadUHRPFile() {}
 
-    // Default values enforced by overloading constructor
     public DownloadUHRPFile(String URL, String bridgeportResolvers) {
       paramStr = "";
       paramStr += "\"URL\":\"" + URL + "\",";
@@ -1800,7 +2093,7 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"downloadUHRPFile", "result");
+        returnError(returnResult, "downloadUHRPFile", "invalid JSON", "result");
       }
     }
   }
@@ -1860,10 +2153,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"newAuthriteRequest", "result");
+        returnError(returnResult, "newAuthriteRequest", "invalid JSON", "result");
       }
     }
   }
+
   /*
   @available(iOS 15.0, *)
   public func createOutputScriptFromPubKey(derivedPublicKey: String) async -> String {
@@ -1883,7 +2177,6 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func createOutputScriptFromPubKey(derivedPublicKey: String) async -> String {
   public class CreateOutputScriptFromPubKey extends CallBaseTypes {
-
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1913,10 +2206,11 @@ public class SDKActivity extends AppCompatActivity {
         intent.putExtra("result", result);
         startActivity(intent);
       } catch (JSONException e) {
-        checkForJSONErrorAndReturnToApp(returnResult,"createOutputScriptFromPubKey", "result");
+        returnError(returnResult, "createOutputScriptFromPubKey", "invalid JSON", "result");
       }
     }
   }
+
   /*** Helper methods ***/
   private String checkIsBase64(String str) {
     String returnStr = str;
@@ -1944,6 +2238,7 @@ public class SDKActivity extends AppCompatActivity {
     }
     return resultStr;
   }
+
   /*
   // Returns a JSON object with non-null values
   func getValidJSON(params: [String: JSON]) -> JSON {
@@ -2046,48 +2341,108 @@ public class SDKActivity extends AppCompatActivity {
       throw new RuntimeException(e);
     }
   }
-  private static Object convertFromBytes(byte[] bytes)
-    throws IOException, ClassNotFoundException {
-    try (
+  private static Object convertFromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
+    Object ret = null;
+    ObjectInputStream in = null;
+    try {
       ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-      ObjectInputStream in = new ObjectInputStream(bis)
-    ) {
-      return in.readObject();
+      in = new ObjectInputStream(bis);
+      ret = in.readObject();
+    } catch(IOException e) {
+      throw e;
+    } catch(ClassNotFoundException e) {
+      throw e;
     }
+    return ret;
   }
-
-  private static byte[] convertToBytes(Object object) throws IOException {
-    try (
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos)
-    ) {
+  private static byte[] convertToBytes(Object object) {
+    Log.i("D_SDK", ">convertToBytes():");
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    try {
+      Log.i("D_SDK", ">convertToBytes():1");
+      ObjectOutputStream out = new ObjectOutputStream(bos);
+      Log.i("D_SDK", ">convertToBytes():2");
       out.writeObject(object);
+      Log.i("D_SDK", ">convertToBytes():3");
+    } catch (IOException e) {
+      Log.i("D_SDK", "ERROR:convertToBytes():" + e);
+      Log.i("D_SDK", "<convertToBytes():" + bos.toByteArray());
       return bos.toByteArray();
     }
+    Log.i("D_SDK", "<convertToBytes():" + bos.toByteArray());
+    return bos.toByteArray();
   }
-
+/*
+  private static byte[] convertToBytes(Object object) throws IOException {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    try {
+      ObjectOutputStream out = new ObjectOutputStream(bos);
+      out.writeObject(object);
+    } catch (IOException e) {
+      Log.i("D_SDK", "ERROR:convertToBytes():" + e);
+      throw e;
+    }
+    return bos.toByteArray();
+  }
+*/
   // Called by App to pass over calling class to be used by Intent callback
   // Raises compile time warning as not used
-  public static String passActivity(Object activity) {
-    byte[] bytes;
+public static String passActivity(Object activity) {
+  Log.i("D_SDK", ">passActivity():0 activity=" + activity);
+  byte[] bytes = {};
+  try {
+    Log.i("D_SDK", " passActivity():1");
+    bytes = convertToBytes(activity);
+    Log.i("D_SDK", " passActivity():2");
+  } catch (Exception e) {
+    Log.i("D_SDK", " passActivity():3");
+  }
+  byte[] base64Encoded = null;
+  Log.i("D_SDK", " passActivity():4");
+
+  // Convert the string to base64 so it can be passed over the net
+  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+    Log.i("D_SDK", " passActivity():5");
+    base64Encoded = Base64.getEncoder().encodeToString(bytes).getBytes();
+  }
+  byte[] finalBase64Encoded = base64Encoded;
+  Log.i("D_SDK", "<passActivity():finalBase64Encoded=" + finalBase64Encoded);
+  return new String(finalBase64Encoded);
+}
+/*
+public static String passActivity(Object activity) {
+    Log.i("D_SDK", ">passActivity():0 activity=" + activity);
+    byte[] bytes = {};
     try {
+      Log.i("D_SDK", " passActivity():1");
       bytes = convertToBytes(activity);
+      Log.i("D_SDK", " passActivity():2");
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      Log.i("D_SDK", " passActivity():3");
+      //throw new RuntimeException(e);
     }
     byte[] base64Encoded = null;
+    Log.i("D_SDK", " passActivity():4");
 
     // Convert the string to base64 so it can be passed over the net
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      Log.i("D_SDK", " passActivity():5");
       base64Encoded = Base64.getEncoder().encodeToString(bytes).getBytes();
     }
     byte[] finalBase64Encoded = base64Encoded;
+    Log.i("D_SDK", "<passActivity():finalBase64Encoded=" + finalBase64Encoded);
     return new String(finalBase64Encoded);
   }
-
+*/
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    Log.i("D_SDK", ">onCreate()");
     super.onCreate(savedInstanceState);
+    Log.i("D_SDK", "onCreate():openBabbage:" + openBabbage);
+    if (openBabbage) {
+      Log.i("D_SDK", "onCreate():openBabbage:return");
+      return;
+    }
     getSupportActionBar().hide();
     Intent intent = getIntent();
     String type = intent.getStringExtra("type");
@@ -2096,9 +2451,44 @@ public class SDKActivity extends AppCompatActivity {
     Log.i("D_SDK", "onCreate():portal:" + portal);
     String url = intent.getStringExtra("url");
     // Log.i("D_SDK", "url:" + url);
-    // if (!type.equals("desktop")) {
-    if (type.equals("desktop") || type.equals("waitForAuthentication") || portal.equals("openBabbage") || portal.equals("waitForAuthentication")) {
+    // if (!type.equals("portal")) {
+    if (openBabbage || type.equals("generateAES256GCMCryptoKey") || type.equals("getIdentityKey") || type.equals("portal") || type.equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
+    // if (openBabbage || type.equals("generateAES256GCMCryptoKey") ||  type.equals("portal") || type.equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
       Log.i("D_SDK", "onCreate():display Webview");
+      Log.i("D_SDK_STACK", "getIdentityKey:portal:" + portal);
+      if (portal.equals("portal")) {
+        Log.i("D_SDK_STACK", "getIdentityKey: delayed while webview displayed");
+        Log.i("D_SDK_STACK", "getIdentityKey: waitingCallTypes:" + waitingCallType);
+        /*
+        waitingCallType.push(
+                new GetPublicKey(
+                        "identity key",
+                        "1",
+                        "",
+                        "true",
+                        "",
+                        "",
+                        ""
+                )
+        );
+        */
+        Log.i("D_SDK_STACK", "waitingCallTypes:" + waitingCallType);
+        // Need to start the child thread to call IsAuthenticated run command
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+          @Override
+          public void run() {
+            WorkerThread workerThread = new WorkerThread();
+            workerThread.start();
+          }
+        }, 20000);
+      }
+      Log.i("D_SDK", "onCreate():COMMENT OUT openBabbage = true");
+      //openBabbage = true;
+      //return;
+      //if (type.equals("generateAES256GCMCryptoKey")) {
+      //  finish();
+      //}
     } else {
       Log.i("D_SDK", "onCreate():display App");
       finish();
@@ -2123,11 +2513,65 @@ public class SDKActivity extends AppCompatActivity {
     webview.setWebViewClient (
       new WebViewClient() {
         @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+          Log.i("D_SDK", ">onPageStarted():type=" + type);
+          if (type.equals("portal")) {
+            return;
+          }
+          super.onPageStarted(view, url, favicon);
+          String callingClass = intent.getStringExtra("callingClass");
+          Log.i("D_SDK", " onPageStarted():created callingClass=" + callingClass);
+          byte[] bytes = decode(
+                  callingClass,
+                  DEFAULT
+          );
+          Log.i("D_SDK", " onPageStarted():created bytes=" + bytes.toString());
+          try {
+          Log.i("D_SDK", " onPageStarted():create classObject");
+          classObject = convertFromBytes(bytes);
+          Log.i("D_SDK", " onPageStarted():created classObject=" + classObject);
+          } catch (IOException e) {
+            Log.i("D_SDK", " onPageStarted():throw new RuntimeException");
+            throw new RuntimeException(e);
+          } catch (ClassNotFoundException e) {
+            Log.i("D_SDK", " onPageStarted():throw new ClassNotFoundException");
+            throw new RuntimeException(e);
+          }
+          //new Intent(SDKActivity.this, classObject.getClass());
+          //intent.putExtra("type", type);
+          //intent.putExtra("uuid", uuid);
+          // startActivity(intent);
+          final Handler handler = new Handler(Looper.getMainLooper());
+          handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+              Log.i("D_SDK", " onPageStarted():pageFinished=" + pageFinished);
+              if (!pageFinished) {
+                Log.i("D_SDK", " onPageStarted():call onPageFinished()");
+                onPageFinished(view, url);
+              }
+            }
+          }, 5000);
+          finish();
+          /*
+          try {
+            Thread.sleep(500);
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+          */
+          // onPageFinished(view, url);
+          Log.i("D_SDK", "<onPageStarted()");
+        }
+
+        @Override
         public void onPageFinished(WebView view, String url) {
+          Log.i("D_SDK", ">onPageFinished():type=" + type);
+          pageFinished = true;
           super.onPageFinished(view, url);
           String waitingType = "";
           uuid = intent.getStringExtra("uuid");
-          if (!type.equals("desktop")) {
+          if(!type.equals("portal")) {
             if (type.equals("waitForAuthentication")) {
               runCommand(new WaitForAuthentication(), uuid, type, portal);
             }
@@ -2137,22 +2581,18 @@ public class SDKActivity extends AppCompatActivity {
             if (type.equals("isAuthenticated")) {
               runCommand(new IsAuthenticated(), uuid, type, portal);
             }
-            String callingClass = intent.getStringExtra("callingClass");
-            byte[] bytes = decode(
-              callingClass,
-              DEFAULT
-            );
-            try {
-              classObject = convertFromBytes(bytes);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            } catch (ClassNotFoundException e) {
-              throw new RuntimeException(e);
+            Log.i("D_SDK", " onPageFinished():created openBabbage=" + openBabbage);
+            if (!openBabbage) {
+              // Process calling class
             }
           }
+          Log.i("D_SDK", " onPageFinished():type=" + type);
           if (type.equals("encrypt")) {
-            String returnType = intent.getStringExtra("returnType");
-            if (returnType == null) {
+            String counterparty = intent.getStringExtra("counterparty");
+            SDKActivity.counterparty = counterparty;
+            Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.plaintext=" + intent.getStringExtra("plaintext"));
+            Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
+            if (counterparty == null) {
               waitingCallType.push(
                 new Encrypt(
                   intent.getStringExtra("plaintext"),
@@ -2166,23 +2606,38 @@ public class SDKActivity extends AppCompatActivity {
                   intent.getStringExtra("plaintext"),
                   intent.getStringExtra("protocolID"),
                   intent.getStringExtra("keyID"),
-                  returnType
+                  intent.getStringExtra("counterparty")
                 )
               );
             }
           }
           if (type.equals("decrypt")) {
-            waitingCallType.push(
-              new Decrypt(
-                intent.getStringExtra("ciphertext"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID")
-              )
-            );
+            String counterparty = intent.getStringExtra("counterparty");
+            SDKActivity.counterparty = counterparty;
+            Log.i("D_SDK", " onPageFinished():decrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
+            if (counterparty == null) {
+              waitingCallType.push(
+                new Decrypt(
+                  intent.getStringExtra("ciphertext"),
+                  intent.getStringExtra("protocolID"),
+                  intent.getStringExtra("keyID")
+                )
+              );
+            } else {
+              waitingCallType.push(
+                new Decrypt(
+                  intent.getStringExtra("ciphertext"),
+                  intent.getStringExtra("protocolID"),
+                  intent.getStringExtra("keyID"),
+                  intent.getStringExtra("counterparty")
+                )
+              );
+            }
           }
           if (type.equals("generateAES256GCMCryptoKey")) {
-            Log.i("D_SDK", "push GenerateAES256GCMCryptoKey()");
+            Log.i("D_SDK", "call push GenerateAES256GCMCryptoKey()");
             waitingCallType.push(new GenerateAES256GCMCryptoKey());
+            Log.i("D_SDK", "called push GenerateAES256GCMCryptoKey()");
           }
           if (type.equals("encryptUsingCryptoKey")) {
             // Log.i("D_SDK_ENCRYPT_KEY", "push EncryptUsingCryptoKey()");
@@ -2313,6 +2768,20 @@ public class SDKActivity extends AppCompatActivity {
               )
             );
           }
+          if (type.equals("getIdentityKey")) {
+            Log.i("D_SDK", "push getIdentityKey()");
+            waitingCallType.push(
+                    new GetPublicKey(
+                            "identity key",
+                            intent.getStringExtra(""),
+                            intent.getStringExtra(""),
+                            "true",
+                            "",
+                            "",
+                            ""
+                    )
+            );
+          }
           if (type.equals("getPublicKey")) {
             waitingCallType.push(
               new GetPublicKey(
@@ -2372,9 +2841,9 @@ public class SDKActivity extends AppCompatActivity {
               )
             );
           }
-          if (!type.equals("waitForAuthentication") && !type.equals("desktop") && !portal.equals("waitForAuthentication")) {
+          if (!type.equals("waitForAuthentication") && !type.equals("portal") && !portal.equals("waitForAuthentication")) {
             if (portal.equals("openBabbage")) {
-              waitingCallType.push(waitingCallType.get(0));
+              // waitingCallType.push(waitingCallType.get(0));
             } else {
               waitingCallType.push(new IsAuthenticated());
             }
@@ -2386,11 +2855,13 @@ public class SDKActivity extends AppCompatActivity {
         }
       }
     );
+
+    // Process waiting command call
     mainThreadHandler =
       new Handler(Looper.myLooper()) {
         @Override
         public void handleMessage(Message msg) {
-          if (msg.what == 1) {
+          if (!waitingCallType.isEmpty() && msg.what == 1) {
             runCommand(waitingCallType.pop(), uuid, type, portal);
           }
         }
