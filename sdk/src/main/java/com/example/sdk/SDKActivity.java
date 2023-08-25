@@ -47,7 +47,8 @@ public class SDKActivity extends AppCompatActivity {
   private static String counterparty = "";
   private static boolean pageFinished = false;
   private static boolean openBabbage = false;
-  private static String URL = "https://staging-mobile-portal.babbage.systems";
+  private static String URL;
+  //= "https://staging-mobile-portal.babbage.systems";
   private Object classObject; // Used for Intent callback
   private WebView webview;
   private CallTypes callTypes = null; // Used as intermediate concrete class to give polymorphism
@@ -67,10 +68,10 @@ public class SDKActivity extends AppCompatActivity {
       portal = "";
     }
   }
-  public static Intent encrypt(Context activityContext, Object instance, TextView messageText) {
-    return encrypt(activityContext, instance, messageText, "self", "");
+  public static Intent encrypt(Context activityContext, Object instance, TextView messageText, String URL) {
+    return encrypt(activityContext, instance, messageText, "self", URL, "");
   }
-  public static Intent encrypt(Context activityContext, Object instance, TextView messageText, String counterparty, String portal) {
+  public static Intent encrypt(Context activityContext, Object instance, TextView messageText, String counterparty, String URL, String portal) {
     SDKActivity.counterparty = counterparty;
     Log.i("D_SDK_DECRYPT", "encrypt():returnResult:counterparty=" + counterparty);
     Log.i("D_SDK", "encrypt():portal:" + portal);
@@ -87,10 +88,10 @@ public class SDKActivity extends AppCompatActivity {
     intent.putExtra("url", URL);
     return intent;
   }
-  public static Intent decrypt(Context activityContext, Object instance, TextView cipherText) {
-    return decrypt(activityContext, instance, cipherText, "self", "");
+  public static Intent decrypt(Context activityContext, Object instance, TextView cipherText, String URL) {
+    return decrypt(activityContext, instance, cipherText, "self", URL, "");
   }
-  public static Intent decrypt(Context activityContext, Object instance, TextView cipherText, String counterparty, String portal) {
+  public static Intent decrypt(Context activityContext, Object instance, TextView cipherText, String counterparty, String URL, String portal) {
     Log.i("D_SDK", "decrypt():portal:" + portal);
     SDKActivity.counterparty = counterparty;
     Log.i("D_SDK_INTENT_DECRYPT", "decrypt():counterparty=" + counterparty);
@@ -107,7 +108,7 @@ public class SDKActivity extends AppCompatActivity {
     intent.putExtra("url", URL);
     return intent;
   }
-  public static Intent portal(Context activityContext, Object instance) {
+  public static Intent portal(Context activityContext, Object instance, String URL) {
     Log.i("D_SDK", "portal()");
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", passActivity(instance));
@@ -167,11 +168,11 @@ public class SDKActivity extends AppCompatActivity {
     Log.i("D_SDK", "processResult():callType:" + processedResult.callType + ",portal:" + processedResult.portal);
     return processedResult;
   }
-  public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance) {
+  public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance, String URL) {
     Log.i("D_SDK", "intent generateAES256GCMCryptoKey()");
-    return generateAES256GCMCryptoKey(activityContext, instance, "");
+    return generateAES256GCMCryptoKey(activityContext, instance, URL,"");
   }
-  public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance, String portal) {
+  public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance, String URL, String portal) {
     Log.i("D_SDK", "generateAES256GCMCryptoKey():portal:0" + portal);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     Log.i("D_SDK", "generateAES256GCMCryptoKey():portal:1");
@@ -183,10 +184,10 @@ public class SDKActivity extends AppCompatActivity {
     intent.putExtra("url", URL);
     return intent;
   }
-  public static Intent openPortal(Context activityContext, Object instance) {
-    return openPortal(activityContext, instance, "");
+  public static Intent openPortal(Context activityContext, Object instance, String URL) {
+    return openPortal(activityContext, instance, URL, "");
   }
-  public static Intent openPortal(Context activityContext, Object instance, String portal) {
+  public static Intent openPortal(Context activityContext, Object instance, String URL, String portal) {
     Log.i("D_SDK", "openPortal():portal:" + portal);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", passActivity(instance));
@@ -196,11 +197,11 @@ public class SDKActivity extends AppCompatActivity {
     intent.putExtra("url", URL);
     return intent;
   }
-  public static Intent getIdentityKey(Context activityContext, Object instance) {
+  public static Intent getIdentityKey(Context activityContext, Object instance, String URL) {
     Log.i("D_SDK", "getIdentityKey():constructor()");
-    return getIdentityKey(activityContext, instance, "");
+    return getIdentityKey(activityContext, instance, URL,"");
   }
-  public static Intent getIdentityKey(Context activityContext, Object instance, String portal) {
+  public static Intent getIdentityKey(Context activityContext, Object instance, String URL, String portal) {
     Log.i("D_SDK", "getIdentityKey():portal:" + portal);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", passActivity(instance));
@@ -211,10 +212,10 @@ public class SDKActivity extends AppCompatActivity {
     intent.putExtra("key", identityKey);
     return intent;
   }
-  public static Intent encryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText) {
-    return encryptUsingCryptoKey(activityContext, instance, cryptoKeyText, messageText, "");
+  public static Intent encryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String URL) {
+    return encryptUsingCryptoKey(activityContext, instance, cryptoKeyText, messageText, URL,"");
   }
-  public static Intent encryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String portal) {
+  public static Intent encryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String URL, String portal) {
     Log.i("D_SDK", "encryptUsingCryptoKey()portal:" + portal);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", passActivity(instance));
@@ -227,10 +228,10 @@ public class SDKActivity extends AppCompatActivity {
     intent.putExtra("url", URL);
     return intent;
   }
-  public static Intent decryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText) {
-    return decryptUsingCryptoKey(activityContext, instance, cryptoKeyText, messageText, "");
+  public static Intent decryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String URL) {
+    return decryptUsingCryptoKey(activityContext, instance, cryptoKeyText, messageText, URL,"");
   }
-  public static Intent decryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String portal) {
+  public static Intent decryptUsingCryptoKey(Context activityContext, Object instance, TextView cryptoKeyText, EditText messageText, String URL, String portal) {
     Log.i("D_SDK", "decryptUsingCryptoKey():portal:" + portal);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", passActivity(instance));
@@ -2450,10 +2451,10 @@ public static String passActivity(Object activity) {
     Log.i("D_SDK", "onCreate():type:" + type);
     Log.i("D_SDK", "onCreate():portal:" + portal);
     String url = intent.getStringExtra("url");
-    // Log.i("D_SDK", "url:" + url);
+    Log.i("D_SDK", "url:" + url);
     // if (!type.equals("portal")) {
     if (openBabbage || type.equals("generateAES256GCMCryptoKey") || type.equals("getIdentityKey") || type.equals("portal") || type.equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
-    // if (openBabbage || type.equals("generateAES256GCMCryptoKey") ||  type.equals("portal") || type.equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
+      // if (openBabbage || type.equals("generateAES256GCMCryptoKey") ||  type.equals("portal") || type.equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
       Log.i("D_SDK", "onCreate():display Webview");
       Log.i("D_SDK_STACK", "getIdentityKey:portal:" + portal);
       if (portal.equals("portal")) {
@@ -2497,62 +2498,68 @@ public static String passActivity(Object activity) {
     setContentView(R.layout.activity_sdk);
     webview = findViewById(R.id.web_html);
     webview.setWebChromeClient (
-      new WebChromeClient() {
-        @Override
-        public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
-          Log.i("D_SDK", "onJsConfirm():result:" + result);
-          return super.onJsConfirm(view, url, message, result);
-        }
-        @Override
-        public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
-          Log.i("D_SDK", "onJsAlert():result" + result);
-          return super.onJsAlert(view, url, message, result);
-        }
-      }
-    );
-    webview.setWebViewClient (
-      new WebViewClient() {
-        @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-          Log.i("D_SDK", ">onPageStarted():type=" + type);
-          if (type.equals("portal")) {
-            return;
-          }
-          super.onPageStarted(view, url, favicon);
-          String callingClass = intent.getStringExtra("callingClass");
-          Log.i("D_SDK", " onPageStarted():created callingClass=" + callingClass);
-          byte[] bytes = decode(
-                  callingClass,
-                  DEFAULT
-          );
-          Log.i("D_SDK", " onPageStarted():created bytes=" + bytes.toString());
-          try {
-          Log.i("D_SDK", " onPageStarted():create classObject");
-          classObject = convertFromBytes(bytes);
-          Log.i("D_SDK", " onPageStarted():created classObject=" + classObject);
-          } catch (IOException e) {
-            Log.i("D_SDK", " onPageStarted():throw new RuntimeException");
-            throw new RuntimeException(e);
-          } catch (ClassNotFoundException e) {
-            Log.i("D_SDK", " onPageStarted():throw new ClassNotFoundException");
-            throw new RuntimeException(e);
-          }
-          //new Intent(SDKActivity.this, classObject.getClass());
-          //intent.putExtra("type", type);
-          //intent.putExtra("uuid", uuid);
-          // startActivity(intent);
-          final Handler handler = new Handler(Looper.getMainLooper());
-          handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-              Log.i("D_SDK", " onPageStarted():pageFinished=" + pageFinished);
-              if (!pageFinished) {
-                Log.i("D_SDK", " onPageStarted():call onPageFinished()");
-                onPageFinished(view, url);
+            new WebChromeClient() {
+              @Override
+              public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+                Log.i("D_SDK", "onJsConfirm():result:" + result);
+                return super.onJsConfirm(view, url, message, result);
+              }
+              @Override
+              public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+                Log.i("D_SDK", "onJsAlert():result" + result);
+                return super.onJsAlert(view, url, message, result);
               }
             }
-          }, 5000);
-          finish();
+    );
+    webview.setWebViewClient (
+            new WebViewClient() {
+              @Override
+              public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.i("D_SDK", ">onPageStarted():type=" + type);
+                //24Aug2023-18:51
+                //if (type.equals("portal")) {
+                //  return;
+                //}
+                super.onPageStarted(view, url, favicon);
+                String callingClass = intent.getStringExtra("callingClass");
+                Log.i("D_SDK", " onPageStarted():created callingClass=" + callingClass);
+                byte[] bytes = decode(
+                        callingClass,
+                        DEFAULT
+                );
+                Log.i("D_SDK", " onPageStarted():created bytes=" + bytes.toString());
+                try {
+                  Log.i("D_SDK", " onPageStarted():create classObject");
+                  classObject = convertFromBytes(bytes);
+                  Log.i("D_SDK", " onPageStarted():created classObject=" + classObject);
+                } catch (IOException e) {
+                  Log.i("D_SDK", " onPageStarted():throw new RuntimeException");
+                  throw new RuntimeException(e);
+                } catch (ClassNotFoundException e) {
+                  Log.i("D_SDK", " onPageStarted():throw new ClassNotFoundException");
+                  throw new RuntimeException(e);
+                }
+                //new Intent(SDKActivity.this, classObject.getClass());
+                //intent.putExtra("type", type);
+                //intent.putExtra("uuid", uuid);
+                // startActivity(intent);
+                if (type.equals("portal")) {
+                  Log.i("D_SDK", " onPageStarted():set openBabbage=true");
+                  openBabbage = true;
+                } else {
+                  final Handler handler = new Handler(Looper.getMainLooper());
+                  handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                      Log.i("D_SDK", " onPageStarted():pageFinished=" + pageFinished);
+                      if (!pageFinished) {
+                        Log.i("D_SDK", " onPageStarted():call onPageFinished()");
+                        onPageFinished(view, url);
+                      }
+                    }
+                  }, 5000);
+                  finish();
+                }
           /*
           try {
             Thread.sleep(500);
@@ -2560,312 +2567,317 @@ public static String passActivity(Object activity) {
             throw new RuntimeException(e);
           }
           */
-          // onPageFinished(view, url);
-          Log.i("D_SDK", "<onPageStarted()");
-        }
+                // onPageFinished(view, url);
+                Log.i("D_SDK", "<onPageStarted()");
+              }
 
-        @Override
-        public void onPageFinished(WebView view, String url) {
-          Log.i("D_SDK", ">onPageFinished():type=" + type);
-          pageFinished = true;
-          super.onPageFinished(view, url);
-          String waitingType = "";
-          uuid = intent.getStringExtra("uuid");
-          if(!type.equals("portal")) {
-            if (type.equals("waitForAuthentication")) {
-              runCommand(new WaitForAuthentication(), uuid, type, portal);
+              @Override
+              public void onPageFinished(WebView view, String url) {
+                Log.i("D_SDK", ">onPageFinished():type=" + type);
+                pageFinished = true;
+                super.onPageFinished(view, url);
+                String waitingType = "";
+                uuid = intent.getStringExtra("uuid");
+                if(!type.equals("portal")) {
+                  if (type.equals("waitForAuthentication")) {
+                    runCommand(new WaitForAuthentication(), uuid, type, portal);
+                  }
+                  if (portal.equals("waitForAuthentication")) {
+                    runCommand(new WaitForAuthentication(), uuid, type, "");
+                  }
+                  if (type.equals("isAuthenticated")) {
+                    runCommand(new IsAuthenticated(), uuid, type, portal);
+                  }
+                  Log.i("D_SDK", " onPageFinished():created openBabbage=" + openBabbage);
+                  if (!openBabbage) {
+                    // Process calling class
+                  }
+                }
+                Log.i("D_SDK", " onPageFinished():type=" + type);
+                if (type.equals("encrypt")) {
+                  String counterparty = intent.getStringExtra("counterparty");
+                  SDKActivity.counterparty = counterparty;
+                  Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.plaintext=" + intent.getStringExtra("plaintext"));
+                  Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
+                  if (counterparty == null) {
+                    waitingCallType.push(
+                            new Encrypt(
+                                    intent.getStringExtra("plaintext"),
+                                    intent.getStringExtra("protocolID"),
+                                    intent.getStringExtra("keyID")
+                            )
+                    );
+                  } else {
+                    waitingCallType.push(
+                            new Encrypt(
+                                    intent.getStringExtra("plaintext"),
+                                    intent.getStringExtra("protocolID"),
+                                    intent.getStringExtra("keyID"),
+                                    intent.getStringExtra("counterparty")
+                            )
+                    );
+                  }
+                }
+                if (type.equals("decrypt")) {
+                  String counterparty = intent.getStringExtra("counterparty");
+                  SDKActivity.counterparty = counterparty;
+                  Log.i("D_SDK", " onPageFinished():decrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
+                  if (counterparty == null) {
+                    waitingCallType.push(
+                            new Decrypt(
+                                    intent.getStringExtra("ciphertext"),
+                                    intent.getStringExtra("protocolID"),
+                                    intent.getStringExtra("keyID")
+                            )
+                    );
+                  } else {
+                    waitingCallType.push(
+                            new Decrypt(
+                                    intent.getStringExtra("ciphertext"),
+                                    intent.getStringExtra("protocolID"),
+                                    intent.getStringExtra("keyID"),
+                                    intent.getStringExtra("counterparty")
+                            )
+                    );
+                  }
+                }
+                if (type.equals("generateAES256GCMCryptoKey")) {
+                  Log.i("D_SDK", "call push GenerateAES256GCMCryptoKey()");
+                  waitingCallType.push(new GenerateAES256GCMCryptoKey());
+                  Log.i("D_SDK", "called push GenerateAES256GCMCryptoKey()");
+                }
+                if (type.equals("encryptUsingCryptoKey")) {
+                  // Log.i("D_SDK_ENCRYPT_KEY", "push EncryptUsingCryptoKey()");
+                  String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
+                  if (!isBase64(base64CryptoKey)) {
+                    returnError(base64CryptoKey, "encryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
+                  }
+                  waitingCallType.push(
+                          new EncryptUsingCryptoKey(
+                                  intent.getStringExtra("plaintext"),
+                                  base64CryptoKey,
+                                  !intent.getStringExtra("returnType").equals("") ? intent.getStringExtra("returnType") : "base64"
+                          )
+                  );
+                }
+                if (type.equals("decryptUsingCryptoKey")) {
+                  // Log.i("D_SDK", "push DecryptUsingCryptoKey()");
+                  String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
+                  if (!isBase64(base64CryptoKey)) {
+                    returnError(base64CryptoKey, "decryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
+                  }
+                  waitingCallType.push(
+                          new DecryptUsingCryptoKey(
+                                  intent.getStringExtra("ciphertext"),
+                                  base64CryptoKey,
+                                  !intent.getStringExtra("returnType").equals("") ? intent.getStringExtra("returnType") : "base64"
+                          )
+                  );
+                }
+                if (type.equals("createAction")) {
+                  waitingCallType.push(
+                          new CreateAction(
+                                  intent.getStringExtra("inputs"),
+                                  intent.getStringExtra("outputs"),
+                                  intent.getStringExtra("description"),
+                                  intent.getStringExtra("bridges"),
+                                  intent.getStringExtra("labels")
+                          )
+                  );
+                }
+                if (type.equals("createHmac")) {
+                  waitingCallType.push(
+                          new CreateHmac(
+                                  intent.getStringExtra("data"),
+                                  intent.getStringExtra("protocolID"),
+                                  intent.getStringExtra("keyID"),
+                                  intent.getStringExtra("description"),
+                                  !intent.getStringExtra("counterparty").equals("") ? intent.getStringExtra("counterparty") : "self",
+                                  intent.getStringExtra("privileged")
+                          )
+                  );
+                }
+                if (type.equals("verifyHmac")) {
+                  waitingCallType.push(
+                          new VerifyHmac(
+                                  intent.getStringExtra("data"),
+                                  intent.getStringExtra("hmac"),
+                                  intent.getStringExtra("protocolID"),
+                                  intent.getStringExtra("keyID"),
+                                  intent.getStringExtra("description"),
+                                  intent.getStringExtra("counterparty"),
+                                  intent.getStringExtra("privileged")
+                          )
+                  );
+                }
+                if (type.equals("createSignature")) {
+                  waitingCallType.push(
+                          new CreateSignature(
+                                  intent.getStringExtra("data"),
+                                  intent.getStringExtra("protocolID"),
+                                  intent.getStringExtra("keyID"),
+                                  intent.getStringExtra("description"),
+                                  intent.getStringExtra("counterparty"),
+                                  intent.getStringExtra("privileged")
+                          )
+                  );
+                }
+                if (type.equals("verifySignature")) {
+                  waitingCallType.push(
+                          new VerifySignature(
+                                  intent.getStringExtra("data"),
+                                  intent.getStringExtra("signature"),
+                                  intent.getStringExtra("protocolID"),
+                                  intent.getStringExtra("keyID"),
+                                  intent.getStringExtra("description"),
+                                  intent.getStringExtra("counterparty"),
+                                  intent.getStringExtra("privileged"),
+                                  intent.getStringExtra("reason")
+                          )
+                  );
+                }
+                if (type.equals("createCertificate")) {
+                  waitingCallType.push(
+                          new CreateCertificate(
+                                  intent.getStringExtra("certificateType"),
+                                  intent.getStringExtra("fieldObject"),
+                                  intent.getStringExtra("certifierUrl"),
+                                  intent.getStringExtra("certifierPublicKey")
+                          )
+                  );
+                }
+                if (type.equals("getCertificates")) {
+                  waitingCallType.push(
+                          new GetCertificates(
+                                  intent.getStringExtra("certifiers"),
+                                  intent.getStringExtra("types")
+                          )
+                  );
+                }
+                if (type.equals("proveCertificate")) {
+                  waitingCallType.push(
+                          new ProveCertificate(
+                                  intent.getStringExtra("certificate"),
+                                  intent.getStringExtra("fieldsToReveal"),
+                                  intent.getStringExtra("verifierPublicIdentityKey")
+                          )
+                  );
+                }
+                if (type.equals("submitDirectTransaction")) {
+                  waitingCallType.push(
+                          new SubmitDirectTransaction(
+                                  intent.getStringExtra("protocolID"),
+                                  intent.getStringExtra("transaction"),
+                                  intent.getStringExtra("senderIdentityKey"),
+                                  intent.getStringExtra("note"),
+                                  intent.getStringExtra("amount"),
+                                  intent.getStringExtra("derivationPrefix")
+                          )
+                  );
+                }
+                if (type.equals("getIdentityKey")) {
+                  Log.i("D_SDK", "push getIdentityKey()");
+                  waitingCallType.push(
+                          new GetPublicKey(
+                                  "identity key",
+                                  intent.getStringExtra(""),
+                                  intent.getStringExtra(""),
+                                  "true",
+                                  "",
+                                  "",
+                                  ""
+                          )
+                  );
+                }
+                if (type.equals("getPublicKey")) {
+                  waitingCallType.push(
+                          new GetPublicKey(
+                                  intent.getStringExtra("protocolID"),
+                                  intent.getStringExtra("keyID"),
+                                  intent.getStringExtra("privileged"),
+                                  intent.getStringExtra("identityKey"),
+                                  intent.getStringExtra("reason"),
+                                  !intent.getStringExtra("counterparty").equals("") ? intent.getStringExtra("counterparty") : "self",
+                                  intent.getStringExtra("description")
+                          )
+                  );
+                }
+                if (type.equals("getVersion")) {
+                  waitingCallType.push(new GetVersion());
+                }
+                if (type.equals("createPushDropScript")) {
+                  waitingCallType.push(
+                          new CreatePushDropScript(
+                                  intent.getStringExtra("fields"),
+                                  intent.getStringExtra("protocolID"),
+                                  intent.getStringExtra("keyID")
+                          )
+                  );
+                }
+                if (type.equals("parapetRequest")) {
+                  waitingCallType.push(
+                          new ParapetRequest(
+                                  intent.getStringExtra("resolvers"),
+                                  intent.getStringExtra("bridge"),
+                                  intent.getStringExtra("type"),
+                                  intent.getStringExtra("query")
+                          )
+                  );
+                }
+                if (type.equals("downloadUHRPFile")) {
+                  waitingCallType.push(
+                          new DownloadUHRPFile(
+                                  intent.getStringExtra("URL"),
+                                  intent.getStringExtra("bridgeportResolvers")
+                          )
+                  );
+                }
+                if (type.equals("newAuthriteRequest")) {
+                  waitingCallType.push(
+                          new NewAuthriteRequest(
+                                  intent.getStringExtra("params"),
+                                  intent.getStringExtra("requestUrl"),
+                                  intent.getStringExtra("fetchConfig")
+                          )
+                  );
+                }
+                if (type.equals("createOutputScriptFromPubKey")) {
+                  waitingCallType.push(
+                          new CreateOutputScriptFromPubKey(
+                                  intent.getStringExtra("derivedPublicKey")
+                          )
+                  );
+                }
+                Log.i("D_SDK", " onPageFinished():before queue type=" + type);
+                if (!type.equals("waitForAuthentication") && !type.equals("portal") && !portal.equals("waitForAuthentication")) {
+                  //24Aug2023-18:59
+                  if (type.equals("portal") || portal.equals("openBabbage")) {
+                    Log.i("D_SDK", " onPageFinished():don't queue as portal type=" + type);
+                  //if (portal.equals("openBabbage")) {
+                    // waitingCallType.push(waitingCallType.get(0));
+                  } else {
+                    waitingCallType.push(new IsAuthenticated());
+                  }
+                  Log.i("D_SDK_STACK", "waitingCallTypes:" + waitingCallType);
+                  // Need to start the child thread to call IsAuthenticated run command
+                  WorkerThread workerThread = new WorkerThread();
+                  workerThread.start();
+                }
+                Log.i("D_SDK", "<onPageFinished():type=" + type);
+              }
             }
-            if (portal.equals("waitForAuthentication")) {
-              runCommand(new WaitForAuthentication(), uuid, type, "");
-            }
-            if (type.equals("isAuthenticated")) {
-              runCommand(new IsAuthenticated(), uuid, type, portal);
-            }
-            Log.i("D_SDK", " onPageFinished():created openBabbage=" + openBabbage);
-            if (!openBabbage) {
-              // Process calling class
-            }
-          }
-          Log.i("D_SDK", " onPageFinished():type=" + type);
-          if (type.equals("encrypt")) {
-            String counterparty = intent.getStringExtra("counterparty");
-            SDKActivity.counterparty = counterparty;
-            Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.plaintext=" + intent.getStringExtra("plaintext"));
-            Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
-            if (counterparty == null) {
-              waitingCallType.push(
-                new Encrypt(
-                  intent.getStringExtra("plaintext"),
-                  intent.getStringExtra("protocolID"),
-                  intent.getStringExtra("keyID")
-                )
-              );
-            } else {
-              waitingCallType.push(
-                new Encrypt(
-                  intent.getStringExtra("plaintext"),
-                  intent.getStringExtra("protocolID"),
-                  intent.getStringExtra("keyID"),
-                  intent.getStringExtra("counterparty")
-                )
-              );
-            }
-          }
-          if (type.equals("decrypt")) {
-            String counterparty = intent.getStringExtra("counterparty");
-            SDKActivity.counterparty = counterparty;
-            Log.i("D_SDK", " onPageFinished():decrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
-            if (counterparty == null) {
-              waitingCallType.push(
-                new Decrypt(
-                  intent.getStringExtra("ciphertext"),
-                  intent.getStringExtra("protocolID"),
-                  intent.getStringExtra("keyID")
-                )
-              );
-            } else {
-              waitingCallType.push(
-                new Decrypt(
-                  intent.getStringExtra("ciphertext"),
-                  intent.getStringExtra("protocolID"),
-                  intent.getStringExtra("keyID"),
-                  intent.getStringExtra("counterparty")
-                )
-              );
-            }
-          }
-          if (type.equals("generateAES256GCMCryptoKey")) {
-            Log.i("D_SDK", "call push GenerateAES256GCMCryptoKey()");
-            waitingCallType.push(new GenerateAES256GCMCryptoKey());
-            Log.i("D_SDK", "called push GenerateAES256GCMCryptoKey()");
-          }
-          if (type.equals("encryptUsingCryptoKey")) {
-            // Log.i("D_SDK_ENCRYPT_KEY", "push EncryptUsingCryptoKey()");
-            String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
-            if (!isBase64(base64CryptoKey)) {
-              returnError(base64CryptoKey, "encryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
-            }
-            waitingCallType.push(
-              new EncryptUsingCryptoKey(
-                intent.getStringExtra("plaintext"),
-                base64CryptoKey,
-                !intent.getStringExtra("returnType").equals("") ? intent.getStringExtra("returnType") : "base64"
-              )
-            );
-          }
-          if (type.equals("decryptUsingCryptoKey")) {
-            // Log.i("D_SDK", "push DecryptUsingCryptoKey()");
-            String base64CryptoKey = intent.getStringExtra("base64CryptoKey");
-            if (!isBase64(base64CryptoKey)) {
-              returnError(base64CryptoKey, "decryptUsingCryptoKey", "invalid base64 crypto key", "base64CryptoKey");
-            }
-            waitingCallType.push(
-              new DecryptUsingCryptoKey(
-                intent.getStringExtra("ciphertext"),
-                base64CryptoKey,
-                !intent.getStringExtra("returnType").equals("") ? intent.getStringExtra("returnType") : "base64"
-              )
-            );
-          }
-          if (type.equals("createAction")) {
-            waitingCallType.push(
-              new CreateAction(
-                intent.getStringExtra("inputs"),
-                intent.getStringExtra("outputs"),
-                intent.getStringExtra("description"),
-                intent.getStringExtra("bridges"),
-                intent.getStringExtra("labels")
-              )
-            );
-          }
-          if (type.equals("createHmac")) {
-            waitingCallType.push(
-              new CreateHmac(
-                intent.getStringExtra("data"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID"),
-                intent.getStringExtra("description"),
-                !intent.getStringExtra("counterparty").equals("") ? intent.getStringExtra("counterparty") : "self",
-                intent.getStringExtra("privileged")
-              )
-            );
-          }
-          if (type.equals("verifyHmac")) {
-            waitingCallType.push(
-              new VerifyHmac(
-                intent.getStringExtra("data"),
-                intent.getStringExtra("hmac"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID"),
-                intent.getStringExtra("description"),
-                intent.getStringExtra("counterparty"),
-                intent.getStringExtra("privileged")
-              )
-            );
-          }
-          if (type.equals("createSignature")) {
-            waitingCallType.push(
-              new CreateSignature(
-                intent.getStringExtra("data"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID"),
-                intent.getStringExtra("description"),
-                intent.getStringExtra("counterparty"),
-                intent.getStringExtra("privileged")
-              )
-            );
-          }
-          if (type.equals("verifySignature")) {
-            waitingCallType.push(
-              new VerifySignature(
-                intent.getStringExtra("data"),
-                intent.getStringExtra("signature"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID"),
-                intent.getStringExtra("description"),
-                intent.getStringExtra("counterparty"),
-                intent.getStringExtra("privileged"),
-                intent.getStringExtra("reason")
-              )
-            );
-          }
-          if (type.equals("createCertificate")) {
-            waitingCallType.push(
-              new CreateCertificate(
-                intent.getStringExtra("certificateType"),
-                intent.getStringExtra("fieldObject"),
-                intent.getStringExtra("certifierUrl"),
-                intent.getStringExtra("certifierPublicKey")
-              )
-            );
-          }
-          if (type.equals("getCertificates")) {
-            waitingCallType.push(
-              new GetCertificates(
-                intent.getStringExtra("certifiers"),
-                intent.getStringExtra("types")
-              )
-            );
-          }
-          if (type.equals("proveCertificate")) {
-            waitingCallType.push(
-              new ProveCertificate(
-                intent.getStringExtra("certificate"),
-                intent.getStringExtra("fieldsToReveal"),
-                intent.getStringExtra("verifierPublicIdentityKey")
-              )
-            );
-          }
-          if (type.equals("submitDirectTransaction")) {
-            waitingCallType.push(
-              new SubmitDirectTransaction(
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("transaction"),
-                intent.getStringExtra("senderIdentityKey"),
-                intent.getStringExtra("note"),
-                intent.getStringExtra("amount"),
-                intent.getStringExtra("derivationPrefix")
-              )
-            );
-          }
-          if (type.equals("getIdentityKey")) {
-            Log.i("D_SDK", "push getIdentityKey()");
-            waitingCallType.push(
-                    new GetPublicKey(
-                            "identity key",
-                            intent.getStringExtra(""),
-                            intent.getStringExtra(""),
-                            "true",
-                            "",
-                            "",
-                            ""
-                    )
-            );
-          }
-          if (type.equals("getPublicKey")) {
-            waitingCallType.push(
-              new GetPublicKey(
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID"),
-                intent.getStringExtra("privileged"),
-                intent.getStringExtra("identityKey"),
-                intent.getStringExtra("reason"),
-                !intent.getStringExtra("counterparty").equals("") ? intent.getStringExtra("counterparty") : "self",
-                intent.getStringExtra("description")
-              )
-            );
-          }
-          if (type.equals("getVersion")) {
-            waitingCallType.push(new GetVersion());
-          }
-          if (type.equals("createPushDropScript")) {
-            waitingCallType.push(
-              new CreatePushDropScript(
-                intent.getStringExtra("fields"),
-                intent.getStringExtra("protocolID"),
-                intent.getStringExtra("keyID")
-              )
-            );
-          }
-          if (type.equals("parapetRequest")) {
-            waitingCallType.push(
-              new ParapetRequest(
-                intent.getStringExtra("resolvers"),
-                intent.getStringExtra("bridge"),
-                intent.getStringExtra("type"),
-                intent.getStringExtra("query")
-              )
-            );
-          }
-          if (type.equals("downloadUHRPFile")) {
-            waitingCallType.push(
-              new DownloadUHRPFile(
-                intent.getStringExtra("URL"),
-                intent.getStringExtra("bridgeportResolvers")
-              )
-            );
-          }
-          if (type.equals("newAuthriteRequest")) {
-            waitingCallType.push(
-              new NewAuthriteRequest(
-                intent.getStringExtra("params"),
-                intent.getStringExtra("requestUrl"),
-                intent.getStringExtra("fetchConfig")
-              )
-            );
-          }
-          if (type.equals("createOutputScriptFromPubKey")) {
-            waitingCallType.push(
-              new CreateOutputScriptFromPubKey(
-                intent.getStringExtra("derivedPublicKey")
-              )
-            );
-          }
-          if (!type.equals("waitForAuthentication") && !type.equals("portal") && !portal.equals("waitForAuthentication")) {
-            if (portal.equals("openBabbage")) {
-              // waitingCallType.push(waitingCallType.get(0));
-            } else {
-              waitingCallType.push(new IsAuthenticated());
-            }
-            Log.i("D_SDK_STACK", "waitingCallTypes:" + waitingCallType);
-            // Need to start the child thread to call IsAuthenticated run command
-            WorkerThread workerThread = new WorkerThread();
-            workerThread.start();
-          }
-        }
-      }
     );
 
     // Process waiting command call
     mainThreadHandler =
-      new Handler(Looper.myLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-          if (!waitingCallType.isEmpty() && msg.what == 1) {
-            runCommand(waitingCallType.pop(), uuid, type, portal);
-          }
-        }
-      };
+            new Handler(Looper.myLooper()) {
+              @Override
+              public void handleMessage(Message msg) {
+                if (!waitingCallType.isEmpty() && msg.what == 1) {
+                  runCommand(waitingCallType.pop(), uuid, type, portal);
+                }
+              }
+            };
 
     // required for most of our React modules (Hades, Prosperity etc.)
     webview.getSettings().setDomStorageEnabled(true);
