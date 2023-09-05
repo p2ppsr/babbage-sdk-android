@@ -34,6 +34,9 @@ public class IsAuthenticated extends SDKActivity.CallBaseTypes implements Serial
       result = (String)jsonReturnResultObject.get("result").toString();
       Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():before result:" + result);
       Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():activity.waitingCallType=" + activity.waitingCallType);
+      //03Sep2023
+      /*** set experimental */
+      result = "false";
       if (result.equals("true") && !activity.waitingCallType.isEmpty()) {
         // Need to start the child thread to call the waiting run command
         Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():activity.waitingCallType=" + activity.waitingCallType);
@@ -41,14 +44,13 @@ public class IsAuthenticated extends SDKActivity.CallBaseTypes implements Serial
         workerThread.start();
       } else {
         Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():EXPERIMENT set return to false");
-        //03Sep2023
-        /*** set experimental */
-        //result = "false";
         Log.i("D_SDK_AUTH", " IsAuthenticated:called():after result:" + result);
         if (result.equals("false")) {
           Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():return:false to App");
           waitingTypeInstance = SDKActivity.setInstance(new WaitForAuthentication(activity));
-          activity.returnUsingWaitingIntent(waitingTypeInstance, "openBabbage");
+          if (!activity.waitingCallType.isEmpty()) {
+            activity.returnUsingWaitingIntent(waitingTypeInstance, SDKActivity.setInstance(activity.waitingCallType.get(0)), "openBabbage");
+          }
         }
       }
     } catch (JSONException e) {

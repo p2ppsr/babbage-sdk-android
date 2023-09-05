@@ -106,24 +106,24 @@ public class SDKActivity extends AppCompatActivity {
     Log.i("D_SDK", "<decrypt():" + intent);
     return intent;
   }
-  public static Intent doWaitingType(Context activityContext, Object instance, String waitingType, String url, String portal) {
-    Log.i("D_SDK", ">doWaitingType():waitingType=" + waitingType);
+  public static Intent doWaitingType(Context activityContext, Object instance, String waitingInstance, String url, String portal) {
+    Log.i("D_SDK", ">doWaitingType():waitingInstance=" + waitingInstance);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", setInstance(instance));
-    intent.putExtra("type", "waitingType");
-    intent.putExtra("waitingType", waitingType);
+    intent.putExtra("type", "waitingInstance");
+    intent.putExtra("waitingInstance", waitingInstance);
     intent.putExtra("url", url);
     intent.putExtra("portal", portal);
     Log.i("D_SDK", "<doWaitingType():" + intent);
     return intent;
   }
-  public static Intent doWaitingType(Context activityContext, Object instance, String waitingType, String waitingNextType, String url, String portal) {
-    Log.i("D_SDK", ">doWaitingType():waitingType=" + waitingType);
+  public static Intent doWaitingType(Context activityContext, Object instance, String waitingInstance, String waitingNextInstance, String url, String portal) {
+    Log.i("D_SDK", ">doWaitingType():waitingInstance=" + waitingInstance);
     Intent intent = new Intent(activityContext, SDKActivity.class);
     intent.putExtra("callingClass", setInstance(instance));
-    intent.putExtra("type", "waitingType");
-    intent.putExtra("waitingType", waitingType);
-    intent.putExtra("waitingNextType", waitingNextType);
+    intent.putExtra("type", "waitingInstance");
+    intent.putExtra("waitingInstance", waitingInstance);
+    intent.putExtra("waitingNextInstance", waitingNextInstance);
     intent.putExtra("url", url);
     intent.putExtra("portal", portal);
     Log.i("D_SDK", "<doWaitingType():" + intent);
@@ -154,12 +154,12 @@ public class SDKActivity extends AppCompatActivity {
     //Log.i("D_SDK", "waitForAuthentication():portal:2");
     intent.putExtra("portal", portal);
     intent.putExtra("type", "waitForAuthentication");
-    //String waitingType = waitingCallType.get(0);
-    //Log.i("D_SDK", "waitForAuthentication():waitingType=" + waitingType);
-    //intent.putExtra("waitingType", );
+    //String waitingInstance = waitingCallType.get(0);
+    //Log.i("D_SDK", "waitForAuthentication():waitingInstance=" + waitingInstance);
+    //intent.putExtra("waitingInstance", );
     intent.putExtra("uuid", UUID.randomUUID().toString());
     intent.putExtra("url", url);
-    intent.putExtra("waitingType", waitingTypeInstance);
+    intent.putExtra("waitingInstance", waitingTypeInstance);
     return intent;
   }
   public static Intent generateAES256GCMCryptoKey(Context activityContext, Object instance, String url) {
@@ -296,6 +296,7 @@ public class SDKActivity extends AppCompatActivity {
     // public void dbg(String returnResult) {
     //   Log.i("D_SDK_INTERFACE_DBG", returnResult);
     // }
+    /*
     @JavascriptInterface
     public void openBabbage() {
       Log.i("D_SDK_INTERFACE", "called openBabbage():callTypes.type:" + callTypes.actualType);
@@ -309,6 +310,7 @@ public class SDKActivity extends AppCompatActivity {
       Log.i("D_SDK_INTERFACE", "called openBabbage():startActivity(intent)");
       startActivity(intent);
     }
+    */
     @JavascriptInterface
     public void closeBabbage() {
       Log.i("D_SDK_INTERFACE", "called closeBabbage():waitingCallType:" + waitingCallType);
@@ -319,7 +321,7 @@ public class SDKActivity extends AppCompatActivity {
       } else {
         Log.i("D_SDK_INTERFACE", "called closeBabbage():babbageWaitingCallType not empty");
         Intent intent = new Intent(SDKActivity.this, classObject.getClass());
-        intent.putExtra("waitingType", setInstance(babbageWaitingCallType.pop()));
+        intent.putExtra("waitingInstance", setInstance(waitingCallType.pop()));
         intent.putExtra("uuid", UUID.randomUUID().toString());
         startActivity(intent);
       }
@@ -2234,7 +2236,7 @@ public class SDKActivity extends AppCompatActivity {
     return ret;
   }
   private static byte[] convertToBytes(Object object) {
-    Log.i("D_SDK", ">convertToBytes():");
+    //Log.i("D_SDK", ">convertToBytes():");
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     try {
       //Log.i("D_SDK", " convertToBytes():1");
@@ -2247,14 +2249,14 @@ public class SDKActivity extends AppCompatActivity {
       Log.i("D_SDK", "<convertToBytes():" + bos.toByteArray());
       return bos.toByteArray();
     }
-    Log.i("D_SDK", "<convertToBytes():" + bos.toByteArray());
+    //Log.i("D_SDK", "<convertToBytes():" + bos.toByteArray());
     return bos.toByteArray();
   }
 
   // Called by App to pass over calling class to be used by Intent callback
   // Raises compile time warning as not used
   public static String setInstance(Object instance) {
-    Log.i("D_SDK", ">setInstance():instance=" + instance);
+    //Log.i("D_SDK", ">setInstance():instance=" + instance);
     byte[] bytes = {};
     try {
       bytes = convertToBytes(instance);
@@ -2268,18 +2270,18 @@ public class SDKActivity extends AppCompatActivity {
       base64Encoded = Base64.getEncoder().encodeToString(bytes).getBytes();
     }
     byte[] finalBase64Encoded = base64Encoded;
-    Log.i("D_SDK", "<setInstance():finalBase64Encoded=" + finalBase64Encoded);
+    //Log.i("D_SDK", "<setInstance():finalBase64Encoded=" + finalBase64Encoded);
     return new String(finalBase64Encoded);
   }
   public static Object getInstance(String instanceStr) {
-    Log.i("D_SDK", ">getInstance()");
+    //Log.i("D_SDK", ">getInstance()");
     byte[] bytes = decode(instanceStr, DEFAULT);
-    Log.i("D_SDK", " getInstance():created bytes=" + bytes.toString());
+    //Log.i("D_SDK", " getInstance():created bytes=" + bytes.toString());
     try {
-      Log.i("D_SDK", " getInstance():create classObject");
+      //Log.i("D_SDK", " getInstance():create classObject");
       Object o = convertFromBytes(bytes);
-      Log.i("D_SDK", " getInstance():created instance=" + o);
-      Log.i("D_SDK", "<getInstance()");
+      //Log.i("D_SDK", " getInstance():created instance=" + o);
+      //Log.i("D_SDK", "<getInstance()");
       return o;
     } catch (IOException e) {
       Log.e("D_SDK", " getInstance():throw new RuntimeException:e=" + e);
@@ -2305,18 +2307,18 @@ public class SDKActivity extends AppCompatActivity {
     Log.i("D_SDK", " onCreate():type:" + type[0]);
     Log.i("D_SDK", " onCreate():portal:" + portal);
     String url = intent.getStringExtra("url");
-    Log.i("D_SDK", "url:" + url);
-    String waitingType = intent.getStringExtra("waitingType");
-    if (waitingType != null) {
-      Log.i("D_SDK", " onCreate():waitingType is not null");
-      type[0] = "portal";
-      openBabbage = true;
-    }
+    Log.i("D_SDK", " onCreate():url:" + url);
+    String instanceStr = intent.getStringExtra("waitingInstance");
     // if (!type.equals("portal")) {
-    if (openBabbage || type[0].equals("waitingType") || type[0].equals("generateAES256GCMCryptoKey") || type[0].equals("getIdentityKey") || type[0].equals("portal") || type[0].equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
+    if (openBabbage || type[0].equals("waitingInstance") || type[0].equals("generateAES256GCMCryptoKey") || type[0].equals("getIdentityKey") || type[0].equals("portal") || type[0].equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
       // if (openBabbage || type.equals("generateAES256GCMCryptoKey") ||  type.equals("portal") || type.equals("waitForAuthentication") || portal.equals("portal") || portal.equals("waitForAuthentication")) {
       Log.i("D_SDK", " onCreate():display Webview");
       Log.i("D_SDK_STACK", " onCreate():portal:" + portal);
+      if (instanceStr != null) {
+        //05Sep2023-2039
+        //type[0] = "portal";
+        openBabbage = true;
+      }
       if (portal.equals("portal")) {
         Log.i("D_SDK", " onCreate():delayed while webview displayed");
         Log.i("D_SDK_STACK", " onCreate():waitingCallTypes:" + waitingCallType);
@@ -2361,7 +2363,7 @@ public class SDKActivity extends AppCompatActivity {
                 String callingClass = intent.getStringExtra("callingClass");
                 Log.i("D_SDK", " onPageStarted():created callingClass=" + callingClass);
                 classObject = getInstance(callingClass);
-                if (type[0].equals("portal") || type[0].equals("waitForAuthentication")) {
+                if (instanceStr != null || type[0].equals("portal") || type[0].equals("waitForAuthentication")) {
                   Log.i("D_SDK", " onPageStarted():set openBabbage=true");
                   openBabbage = true;
                   return;
@@ -2391,8 +2393,34 @@ public class SDKActivity extends AppCompatActivity {
                   Log.i("D_SDK", "<onPageFinished()");
                   return;
                 }
+                if (instanceStr != null) {
+                  Log.i("D_SDK", " onCreate():waitingInstance is not null");
+                  CallBaseTypes instance = (CallBaseTypes)getInstance(instanceStr);
+                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():instance=" + instance);
+                  String className = instance.getClass().getName();
+                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():className=" + className);
+                  String[] classNames  = className.split("[.]", 0);
+                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():classNames.length=" + classNames.length + ",classNames=" + classNames);
+                  type[0] = classNames[3].substring(0, 1).toLowerCase() + classNames[3].substring(1);
+                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():type[0]=" + type[0]);
+                  String s = "window.postMessage(" + instance.caller().replace("uuid", UUID.randomUUID().toString()) + ")";
+                  Log.i("D_SDK_WAITING", " onPageFinished():s=" + s);
+                  doJavaScript(webview, s);
+                  Log.i("D_SDK_WAITING", " onPageFinished():called runCommand():type=" + type[0]);
+                  String waitingInstanceStr = intent.getStringExtra("waitingNextInstance");
+                  if (waitingInstanceStr != null) {
+                    Log.i("D_SDK", " onCreate():waitingNextInstance is not null");
+                    CallBaseTypes waitingInstance = (CallBaseTypes) getInstance(waitingInstanceStr);
+                    Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():waitingInstance=" + waitingInstance);
+                    Log.i("D_SDK", " onPageFinished():waitingInstance before waitingCallType=" + waitingCallType);
+                    waitingCallType.push(waitingInstance);
+                    Log.i("D_SDK", " onPageFinished():waitingInstance after waitingCallType=" + waitingCallType);
+                  }
+                  type[0] = "portal";
+                  openBabbage = true;
+                }
                 //25Aug2023
-                //String waitingType = "";
+                //String waitingInstance = "";
                 uuid = intent.getStringExtra("uuid");
                 if(!type[0].equals("portal")) {
                   if (type[0].equals("waitForAuthentication")) {
@@ -2408,22 +2436,7 @@ public class SDKActivity extends AppCompatActivity {
                   if (!openBabbage) {
                     // Process calling class
                   }
-                }
-                if (waitingType != null) {
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand()");
-                  CallBaseTypes instance = (CallBaseTypes)getInstance(waitingType);
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():instance=" + instance);
-                  String className = instance.getClass().getName();
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():className=" + className);
-                  String[] classNames  = className.split("[.]", 0);
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():classNames.length=" + classNames.length + ",classNames=" + classNames);
-                  type[0] = classNames[3].substring(0, 1).toLowerCase() + classNames[3].substring(1);
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():type[0]=" + type[0]);
-                  runCommand(instance, UUID.randomUUID().toString(), type[0], portal);
-                  Log.i("D_SDK_WAITING", " onPageFinished():called runCommand():type=" + type[0]);
-                  type[0] = "portal";
-                  openBabbage = true;
-                } else {
+                //} else {
                   Log.i("D_SDK", " onPageFinished():type=" + type[0]);
                   if (type[0].equals("encrypt")) {
                     Encrypt encrypt = null;
@@ -2448,7 +2461,9 @@ public class SDKActivity extends AppCompatActivity {
                               intent.getStringExtra("counterparty")
                       );
                     }
+                    Log.i("D_SDK", " onPageFinished():encrypt before waitingCallType=" + waitingCallType);
                     waitingCallType.push(encrypt);
+                    Log.i("D_SDK", " onPageFinished():encrypt after waitingCallType=" + waitingCallType);
                     //03Sep2023-1402
                     //*** Added Experimental Test ***//
                     //babbageWaitingCallType.push(waitingCallType.get(0));
@@ -2693,8 +2708,9 @@ public class SDKActivity extends AppCompatActivity {
                     finish();
                   }
                 }
+                Log.i("D_SDK_STACK", " onPageFinished():waitingCallTypes:" + waitingCallType);
                 Log.i("D_SDK", " onPageFinished():before queue type=" + type[0]);
-                if (!type[0].equals("waitForAuthentication") && !type[0].equals("portal") && !portal.equals("waitForAuthentication") || type[0].equals("waitingType")) {
+                if (!type[0].equals("waitForAuthentication") && !type[0].equals("portal") && !portal.equals("waitForAuthentication")) {
                   //24Aug2023-18:59
                   if (type[0].equals("portal") || portal.equals("openBabbage")) {
                     Log.i("D_SDK", " onPageFinished():don't queue as portal type=" + type[0]);
@@ -2707,11 +2723,11 @@ public class SDKActivity extends AppCompatActivity {
                     Log.i("D_SDK_BABBAGE_STACK", "onPageFinished():after push():babbageWaitingCallType=" + babbageWaitingCallType);
                     waitingCallType.push(new IsAuthenticated(SDKActivity.this));
                   }
-                  Log.i("D_SDK_STACK", "waitingCallTypes:" + waitingCallType);
                   // Need to start the child thread to call IsAuthenticated run command
                   WorkerThread workerThread = new WorkerThread();
                   workerThread.start();
                 }
+                Log.i("D_SDK_STACK", " onPageFinished():waitingCallTypes:" + waitingCallType);
                 Log.i("D_SDK", "<onPageFinished():type=" + type[0]);
               }
             }
@@ -2737,6 +2753,24 @@ public class SDKActivity extends AppCompatActivity {
     webview.addJavascriptInterface(new WebAppInterface(),"androidMessageHandler");
     webview.loadUrl(url);
   }
+  public void returnUsingWaitingIntent(String waitingTypeInstance, String waitingNextTypeInstance, String portal) {
+    Log.i("D_SDK_RETURN_WAITING_INTENT", ">returnUsingWaitingIntent():portal=" + portal + ",waitingTypeInstance=" + waitingTypeInstance +  ",waitingNextTypeInstance=" + waitingNextTypeInstance);
+    Intent intent = null;
+    try {
+      intent = new Intent(this, classObject.getClass());
+    } catch (Exception e) {
+      Log.e("D_SDK_RETURN_WAITING_INTENT", " returnUsingWaitingIntent():ERROR:e=" + e);
+    }
+    intent.putExtra("waitingInstance", waitingTypeInstance);
+    intent.putExtra("waitingNextInstance", waitingNextTypeInstance);
+    intent.putExtra("portal", portal);
+    try {
+      startActivity(intent);
+    } catch (Exception e) {
+      Log.e("D_SDK_RETURN_WAITING_INTENT", " returnUsingWaitingIntent():ERROR:e=" + e);
+    }
+    Log.i("D_SDK_RETURN_WAITING_INTENT", "<returnUsingWaitingIntent():called startActivity()");
+  }
   public void returnUsingWaitingIntent(String waitingTypeInstance, String portal) {
     Log.i("D_SDK_RETURN_WAITING_INTENT", ">returnUsingWaitingIntent():portal=" + portal +",waitingTypeInstance=" + waitingTypeInstance);
     Intent intent = null;
@@ -2745,14 +2779,14 @@ public class SDKActivity extends AppCompatActivity {
     } catch (Exception e) {
       Log.e("D_SDK_RETURN_WAITING_INTENT", " returnUsingWaitingIntent():ERROR:e=" + e);
     }
-    intent.putExtra("waitingType", waitingTypeInstance);
+    intent.putExtra("waitingInstance", waitingTypeInstance);
     intent.putExtra("portal", portal);
     try {
       startActivity(intent);
-      Log.i("D_SDK_RETURN_WAITING_INTENT", "<returnUsingWaitingIntent():called startActivity()");
     } catch (Exception e) {
       Log.e("D_SDK_RETURN_WAITING_INTENT", " returnUsingWaitingIntent():ERROR:e=" + e);
     }
+    Log.i("D_SDK_RETURN_WAITING_INTENT", "<returnUsingWaitingIntent():called startActivity()");
   }
   public void returnUsingIntent(String type, String result) {
     Log.i("D_SDK_RETURN_INTENT", ">returnUsingIntent():type=" + type + ",result=" + result);
