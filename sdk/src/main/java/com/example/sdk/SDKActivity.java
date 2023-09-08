@@ -343,8 +343,7 @@ public class SDKActivity extends AppCompatActivity {
         startActivity(intent);
       }
       // Process the waiting command(s)
-      WorkerThread workerThread = new WorkerThread();
-      workerThread.start();
+      processCommands();
     }
     @JavascriptInterface
     public void isFocused() {
@@ -2175,7 +2174,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   public static String convertBase64ToString(String codedStr){
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-      Log.i("D_SDK", "convertBase64ToString()");
+      //Log.i("D_SDK", "convertBase64ToString()");
       byte[] decodedStr = Base64.getUrlDecoder().decode(codedStr);
       return new String(decodedStr);
     }
@@ -2189,25 +2188,12 @@ public class SDKActivity extends AppCompatActivity {
   // Generic 'run' command
 
   public void runCommand(String s) {
-    Log.i("D_SDK", ">runCommand():s:" + s);
+    //Log.i("D_SDK", ">runCommand():s:" + s);
     s = "window.postMessage(" + s + ")";
-    Log.i("D_SDK", " runCommand():s:" + s);
+    //Log.i("D_SDK", " runCommand():s:" + s);
     doJavaScript(webview, s);
-    Log.i("D_SDK", "<runCommand()");
+    //Log.i("D_SDK", "<runCommand()");
   }
-  /*
-  public void runCommand(CallBaseTypes type, String uuid, String actualType, String portal) {
-    Log.i("D_SDK", ">runCommand():type:" + type + ",uuid=" + uuid + ",actualType=" + actualType + ",portal=" + portal);
-    //callTypes.update(type, actualType, portal);
-    String s = "window.postMessage(" + callTypes.caller().replace("uuid", uuid) + ")";
-    Log.i("D_SDK", " runCommand():s=" + s);
-    doJavaScript(
-      webview,
-      s
-    );
-    Log.i("D_SDK", "<runCommand()");
-  }
-  */
 
   // Convert the string to base64 so it can be passed over the net
   public static String convertStringToBase64(String str) {
@@ -2252,8 +2238,8 @@ public class SDKActivity extends AppCompatActivity {
       out.writeObject(object);
       //Log.i("D_SDK", " convertToBytes():3");
     } catch (IOException e) {
-      Log.i("D_SDK", "ERROR:convertToBytes():" + e);
-      Log.i("D_SDK", "<convertToBytes():" + bos.toByteArray());
+      Log.e("D_SDK", "ERROR:convertToBytes():" + e);
+      Log.e("D_SDK", "<convertToBytes():" + bos.toByteArray());
       return bos.toByteArray();
     }
     //Log.i("D_SDK", "<convertToBytes():" + bos.toByteArray());
@@ -2298,6 +2284,10 @@ public class SDKActivity extends AppCompatActivity {
       throw new RuntimeException(e);
     }
   }
+  private void processCommands() {
+    WorkerThread workerThread = new WorkerThread();
+    workerThread.start();
+  }
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     Log.i("D_SDK", ">onCreate()");
@@ -2334,9 +2324,7 @@ public class SDKActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
           @Override
           public void run() {
-            WorkerThread workerThread = new WorkerThread();
-            workerThread.start();
-          }
+            processCommands();          }
         }, 20000);
       }
       Log.i("D_SDK", " onCreate():COMMENT OUT openBabbage = true");
@@ -2402,48 +2390,34 @@ public class SDKActivity extends AppCompatActivity {
                 }
                 if (instanceStr != null) {
                   Log.i("D_SDK", " onCreate():waitingInstance is not null");
-                  CallBaseTypes instance = (CallBaseTypes)getInstance(instanceStr);
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():instance=" + instance);
-                  String className = instance.getClass().getName();
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():className=" + className);
-                  String[] classNames  = className.split("[.]", 0);
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():classNames.length=" + classNames.length + ",classNames=" + classNames);
-                  type[0] = classNames[3].substring(0, 1).toLowerCase() + classNames[3].substring(1);
-                  Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():type[0]=" + type[0]);
-                  String s = "window.postMessage(" + instance.get().replace("uuid", UUID.randomUUID().toString()) + ")";
-                  Log.i("D_SDK_WAITING", " onPageFinished():s=" + s);
-                  doJavaScript(webview, s);
-                  Log.i("D_SDK_WAITING", " onPageFinished():called runCommand():type=" + type[0]);
+                  CallBaseTypes instance = (CallBaseTypes) getInstance(instanceStr);
+                  runCommand(instance.get());
                   String waitingInstanceStr = intent.getStringExtra("waitingNextInstance");
                   if (waitingInstanceStr != null) {
-                    Log.i("D_SDK", " onCreate():waitingNextInstance is not null");
+                    //Log.i("D_SDK", " onCreate():waitingNextInstance is not null");
                     CallTypes waitingInstance = (CallTypes) getInstance(waitingInstanceStr);
-                    Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():waitingInstance=" + waitingInstance);
-                    Log.i("D_SDK", " onPageFinished():waitingInstance before waitingCallType=" + waitingCallType);
                     waitingCallType.push(waitingInstance);
-                    Log.i("D_SDK", " onPageFinished():waitingInstance after waitingCallType=" + waitingCallType);
+                    //Log.i("D_SDK", " onPageFinished():waitingInstance after waitingCallType=" + waitingCallType);
                   }
-                  type[0] = "portal";
+                  //Log.i("D_SDK", " onPageFinished():waitingInstance before waitingCallType=" + waitingCallType);
+                  waitingCallType.push(instance);
+                  Log.i("D_SDK", " onPageFinished():waitingInstance after waitingCallType=" + waitingCallType);
+                  //type[0] = "portal";
                   openBabbage = true;
-                }
-                //25Aug2023
-                //String waitingInstance = "";
-                uuid = intent.getStringExtra("uuid");
-                if(!type[0].equals("portal")) {
-                  if (type[0].equals("waitForAuthentication")) {
-                    runCommand(new WaitForAuthentication(SDKActivity.this).get());
-                  }
-                  if (portal.equals("waitForAuthentication")) {
-                    runCommand(new WaitForAuthentication(SDKActivity.this).get());
-                  }
-                  if (type[0].equals("isAuthenticated")) {
-                    runCommand(new IsAuthenticated(SDKActivity.this).get());
-                  }
-                  Log.i("D_SDK", " onPageFinished():created openBabbage=" + openBabbage);
-                  if (!openBabbage) {
-                    // Process calling class
-                  }
-                //} else {
+                  processCommands();
+                  finish();
+                  Log.i("D_SDK", "<onPageFinished()");
+                } else if (type[0].equals("waitForAuthentication")) {
+                  callTypes = new WaitForAuthentication(SDKActivity.this);
+                  callTypes.caller();
+                  runCommand(callTypes.get());
+                  //Log.i("D_SDK", " onPageFinished():created openBabbage=" + openBabbage);
+                } else if (type[0].equals("isAuthenticated")) {
+                  callTypes = new IsAuthenticated(SDKActivity.this);
+                  callTypes.caller();
+                  runCommand(callTypes.get());
+                  //Log.i("D_SDK", " onPageFinished():created openBabbage=" + openBabbage);
+                } else {
                   Log.i("D_SDK", " onPageFinished():type=" + type[0]);
                   if (type[0].equals("encrypt")) {
                     //CallTypes callTypes = null;
@@ -2451,7 +2425,7 @@ public class SDKActivity extends AppCompatActivity {
                     SDKActivity.counterparty = counterparty;
                     Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
                     if (counterparty == null) {
-                      callTypes =new Encrypt(SDKActivity.this);
+                      callTypes = new Encrypt(SDKActivity.this);
                       ((Encrypt) callTypes).process(
                               intent.getStringExtra("plaintext"),
                               intent.getStringExtra("protocolID"),
@@ -2460,7 +2434,7 @@ public class SDKActivity extends AppCompatActivity {
                     } else {
                       //03Sep2023-1402
                       //*** Added Experimental Test ***//
-                      callTypes =new Encrypt(SDKActivity.this);
+                      callTypes = new Encrypt(SDKActivity.this);
                       ((Encrypt) callTypes).process(
                               intent.getStringExtra("plaintext"),
                               intent.getStringExtra("protocolID"),
@@ -2711,31 +2685,11 @@ public class SDKActivity extends AppCompatActivity {
                     Log.i("D_SDK", "<onPageFinished():type=" + type[0]);
                     finish();
                   }
-                }
-                callTypes = new IsAuthenticated(SDKActivity.this);
-                callTypes.caller();
-                waitingCallType.push(callTypes);
-                // Need to start the child thread to call IsAuthenticated run command
-                WorkerThread workerThread = new WorkerThread();
-                workerThread.start();
-
-                /*
-                Log.i("D_SDK_STACK", " onPageFinished():waitingCallTypes:" + waitingCallType);
-                Log.i("D_SDK", " onPageFinished():before queue type=" + type[0]);
-                if (!type[0].equals("waitForAuthentication") && !type[0].equals("portal") && !portal.equals("waitForAuthentication")) {
-                  //24Aug2023-18:59
-                  if (type[0].equals("portal") || portal.equals("openBabbage")) {
-                    Log.i("D_SDK", " onPageFinished():don't queue as portal type=" + type[0]);
-                    //25Aug2023
-                    //waitingCallType.push(waitingCallType.get(0));
-                  } else {
-                    waitingCallType.push(new IsAuthenticated(SDKActivity.this));
-                  }
+                  callTypes = new IsAuthenticated(SDKActivity.this);
+                  callTypes.caller();
+                  waitingCallType.push(callTypes);
                   // Need to start the child thread to call IsAuthenticated run command
-                  WorkerThread workerThread = new WorkerThread();
-                  workerThread.start();
-                }
-                */
+                  processCommands();                }
                 Log.i("D_SDK_STACK", " onPageFinished():waitingCallTypes:" + waitingCallType);
                 Log.i("D_SDK", "<onPageFinished():type=" + type[0]);
               }
