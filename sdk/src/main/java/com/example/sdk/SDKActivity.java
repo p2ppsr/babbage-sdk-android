@@ -1,6 +1,5 @@
 package com.example.sdk;
 
-import com.example.sdk.SDKActivity;
 import static org.apache.commons.codec.binary.Base64.isBase64;
 import static android.util.Base64.DEFAULT;
 import static android.util.Base64.decode;
@@ -13,7 +12,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.telecom.Call;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
@@ -22,7 +20,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.ByteArrayInputStream;
@@ -31,10 +28,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Objects;
 import java.util.Random;
 import java.util.Stack;
 import java.util.UUID;
@@ -54,9 +49,8 @@ public class SDKActivity extends AppCompatActivity {
   //= "https://staging-mobile-portal.babbage.systems";
   public static Object classObject; // Used for Intent callback
   private WebView webview;
-  private CallTypes callTypes = null; // Used as intermediate concrete class to give polymorphism
-  private Stack<CallBaseTypes> babbageWaitingCallType = new Stack<CallBaseTypes>(); // Stores the waiting call type while authentication is performed
-  Stack<CallBaseTypes> waitingCallType = new Stack<CallBaseTypes>(); // Stores the waiting call type while authentication is performed
+  public CallTypes callTypes = null; // Used as intermediate concrete class to give polymorphism
+  public Stack<CallBaseTypes> waitingCallType = new Stack<CallBaseTypes>(); // Stores the waiting call type while authentication is performed
   private static Handler mainThreadHandler; // Needed to keep run commands calls in a queue
   private String uuid = ""; // Has to be available to run the queued run command
   private static String identityKey = ""; //
@@ -259,18 +253,44 @@ public class SDKActivity extends AppCompatActivity {
 
   abstract static class CallBaseTypes {
 
-    abstract String caller();
-
+    abstract void caller();
+    abstract void caller(String type);
+    abstract void caller(String type, String paramStr);
     abstract void called(String returnResult);
+
+    abstract String get();
+
   }
 
-  class CallTypes extends CallBaseTypes implements Serializable {
-    public CallBaseTypes type;
-    public String actualType;
-    public String portal;
+  public static class CallTypes extends CallBaseTypes implements Serializable {
+    String command = "";
+    public CallBaseTypes type = null;
+    public String actualType = "";
+    //public String portal;
 
     public CallTypes() {}
-
+    public  void caller(){}
+    public void caller(String type) {
+      caller(type, "");
+    }
+    public void caller(String type, String paramStr) {
+      Log.i("D_SDK", ">CallTypes:caller():type=" + type + ",paramStr=" + paramStr);
+      actualType = type;
+      command = "{";
+      command += "\"type\":\"CWI\",";
+      command += "\"call\":\"" +  type + "\",";
+      command += "\"params\":{" + paramStr;
+      command += "},";
+      command += "\"originator\":\"projectbabbage.com\",";
+      command += "\"id\":\"" + UUID.randomUUID().toString() + "\"";
+      command += "}";
+      Log.i("D_SDK", "<CallTypes:caller():command=" + command);
+    }
+    String get() {
+      Log.i("D_SDK", "<>CallTypes:get():" + command);
+      return command;
+    }
+    /*
     public void update(CallBaseTypes type, String actualType, String portal) {
       Log.i("D_SDK", ">update():type=" + type + ",actualType=" + actualType + ",portal=" + portal);
       this.type = type;
@@ -278,9 +298,7 @@ public class SDKActivity extends AppCompatActivity {
       this.portal = portal;
       Log.i("D_SDK", "<update()");
     }
-    public String caller() {
-      return type.caller();
-    }
+    */
     public void called(String returnResult) {
       type.called(returnResult);
     }
@@ -314,9 +332,8 @@ public class SDKActivity extends AppCompatActivity {
     @JavascriptInterface
     public void closeBabbage() {
       Log.i("D_SDK_INTERFACE", "called closeBabbage():waitingCallType:" + waitingCallType);
-      Log.i("D_SDK_INTERFACE", "called closeBabbage():babbageWaitingCallType:" + babbageWaitingCallType);
       openBabbage = false;
-      if (babbageWaitingCallType.isEmpty()) {
+      if (waitingCallType.isEmpty()) {
         finish();
       } else {
         Log.i("D_SDK_INTERFACE", "called closeBabbage():babbageWaitingCallType not empty");
@@ -339,7 +356,10 @@ public class SDKActivity extends AppCompatActivity {
     }
     @JavascriptInterface
     public void isAuthenticated(String returnResult) {
+      Log.i("D_SDK_INTERFACE_IS_AUTHENTICATED", ">isAuthenticated():returnResult=" + returnResult);
+      Log.i("D_SDK_INTERFACE_IS_AUTHENTICATED", "isAuthenticated():callTypes=" + callTypes);
       callTypes.called(returnResult);
+      Log.i("D_SDK_INTERFACE_IS_AUTHENTICATED", "<isAuthenticated()");
     }
     @JavascriptInterface
     public void encrypt(String returnResult) {
@@ -550,7 +570,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func decrypt(ciphertext: String, protocolID: JSON, keyID: String, counterparty: String? = "self") async throws -> String {
-  public class Decrypt extends CallBaseTypes implements Serializable {
+  public class Decrypt extends CallTypes implements Serializable {
     private String paramStr;
 
     // Required for polymorphism
@@ -573,17 +593,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"counterparty\":\"" + counterparty + "\",";
       paramStr += "\"returnType\":\"string\"";
     }
-    public String caller() {
-      Log.i("D_SDK_DECRYPT", "caller():returnResult:counterparty=" + counterparty);
-      String cmdJSONString = "";
-      cmdJSONString += "{\"type\":\"CWI\",";
-      cmdJSONString += "\"call\":\"decrypt\",";
-      cmdJSONString += "\"params\":{" + paramStr;
-      cmdJSONString += "},";
-      cmdJSONString += "\"originator\":\"projectbabbage.com\",";
-      cmdJSONString += "\"id\":\"uuid\"";
-      cmdJSONString += "}";
-      return cmdJSONString;
+    public void caller() {
+      caller("decrypt", paramStr);
     }
     public void called(String returnResult) {
       Log.i("D_SDK_DECRYPT", "called():returnResult:" + returnResult);
@@ -623,11 +634,10 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func generateAES256GCMCryptoKey() async -> String {
-  public class GenerateAES256GCMCryptoKey extends CallBaseTypes implements Serializable {
-
-    public String caller() {
+  public class GenerateAES256GCMCryptoKey extends CallTypes implements Serializable {
+    public void caller() {
       Log.i("D_SDK_GEN_CRYPT", "caller()");
-      return "{\"type\":\"CWI\",\"call\":\"generateAES256GCMCryptoKey\",\"params\":{},\"id\":\"uuid\"}";
+      super.caller("generateAES256GCMCryptoKey");
     }
     public void called(String returnResult) {
       Log.i("D_SDK_GEN_CRYPT", " >called():returnResult:" + returnResult);
@@ -714,7 +724,7 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func encryptUsingCryptoKey(plaintext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
   // Default values enforced by overloading constructor
-  public class EncryptUsingCryptoKey extends CallBaseTypes implements Serializable {
+  public class EncryptUsingCryptoKey extends CallTypes implements Serializable {
     private String paramStr;
     private String base64CryptoKey;
 
@@ -736,15 +746,15 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
       paramStr += "\"returnType\":\"" + returnType + "\"";
     }
-    public String caller() {
+
+     public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"encryptUsingCryptoKey\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
-    }
+     }
     public void called(String returnResult) {
       Log.i("D_SDK_CRYPT_KEY_ENCRYPT", "called():returnResult:" + returnResult);
       try {
@@ -795,7 +805,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func decryptUsingCryptoKey(ciphertext: String, base64CryptoKey: String, returnType: String? = "base64") async -> String {
-  public class DecryptUsingCryptoKey extends CallBaseTypes implements Serializable {
+  public class DecryptUsingCryptoKey extends CallTypes implements Serializable {
     private String paramStr = "";
     private String base64CryptoKey;
 
@@ -817,14 +827,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"base64CryptoKey\":\"" + base64CryptoKey + "\",";
       paramStr += "\"returnType\":\"" + returnType + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "";
       cmdJSONString += "{\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"decryptUsingCryptoKey\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_CRYPT_KEY_DECRYPT", "called():returnResult:" + returnResult);
@@ -878,7 +887,7 @@ public class SDKActivity extends AppCompatActivity {
     }
   */
   // public func createAction(inputs: JSON? = nil, outputs: JSON, description: String, bridges: JSON? = nil, labels: JSON? = nil) async -> JSON {
-  public class CreateAction extends CallBaseTypes implements Serializable {
+  public class CreateAction extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -911,14 +920,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"bridges\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "bridges") + "\",";
       paramStr += "\"labels\":\"" + checkForJSONErrorAndReturnToApp(inputs, "createAction", "labels") + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createAction\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_CREATE_ACTION", "called():returnResult:" + returnResult);
@@ -965,7 +973,7 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func createHmac(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = "self", privileged: Bool? = nil) async -> String {
   // Default values enforced by overloading constructor
-  public class CreateHmac extends CallBaseTypes implements Serializable {
+  public class CreateHmac extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1007,14 +1015,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"counterparty\":\"" + counterparty + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\"";
    }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createHmac\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_CREATE_HMAC", "called():returnResult:" + returnResult);
@@ -1071,7 +1078,7 @@ public class SDKActivity extends AppCompatActivity {
   */
   // Default values enforced by overloading constructor
   // public func verifyHmac(data: String, hmac: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: Bool? = nil) async -> Bool {
-  public class VerifyHmac extends CallBaseTypes implements Serializable {
+  public class VerifyHmac extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1115,14 +1122,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"counterparty\":\"" + counterparty + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"verifyHmac\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_VERIFY_HMAC", "called():returnResult:" + returnResult);
@@ -1168,7 +1174,7 @@ public class SDKActivity extends AppCompatActivity {
   */
   //   public func createSignature(data: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil) async -> String {
   // Default values enforced by overloading constructor
-  public class CreateSignature extends CallBaseTypes implements Serializable {
+  public class CreateSignature extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1208,14 +1214,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"counterparty\":\"" + counterparty + "\",";
       paramStr += "\"privileged\":\"" + privileged + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createSignature\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_CREATE_SIG", "called():returnResult:" + returnResult);
@@ -1273,7 +1278,7 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func verifySignature(data: String, signature: String, protocolID: String, keyID: String, description: String? = nil, counterparty: String? = nil, privileged: String? = nil, reason: String? = nil) async -> Bool{
   // Default values enforced by overloading constructor
-  public class VerifySignature extends CallBaseTypes implements Serializable {
+  public class VerifySignature extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1328,14 +1333,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"privileged\":\"" + privileged + "\",";
       paramStr += "\"reason\":\"" + reason + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"verifySignature\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_VERIFY_HMAC", "called():returnResult:" + returnResult);
@@ -1375,7 +1379,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func createCertificate(certificateType: String, fieldObject: JSON, certifierUrl: String, certifierPublicKey: String) async -> JSON {
-  public class CreateCertificate extends CallBaseTypes implements Serializable {
+  public class CreateCertificate extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1388,14 +1392,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"certifierUrl\":\"" + certifierUrl + "\",";
       paramStr += "\"certifierPublicKey\":\"" + certifierPublicKey + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createCertificate\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_CREATE_CERT", "called():returnResult:" + returnResult);
@@ -1433,7 +1436,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func getCertificates(certifiers: JSON, types: JSON) async -> JSON {
-  public class GetCertificates extends CallBaseTypes implements Serializable {
+  public class GetCertificates extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1444,15 +1447,14 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"certifiers\":\"" + checkForJSONErrorAndReturnToApp(certifiers, "ninja.findCertificates", "certifiers") + "\",";
       paramStr += "\"types\":\"" + checkForJSONErrorAndReturnToApp(types, "ninja.findCertificates", "types") + "\"";
     }
-    public String caller() {
+     public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"ninja.findCertificates\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
-    }
+     }
     public void called(String returnResult) {
       Log.i("D_SDK_GET_CERTS", "called():returnResult:" + returnResult);
       try {
@@ -1492,7 +1494,7 @@ public class SDKActivity extends AppCompatActivity {
   */
   // public func proveCertificate(certificate: JSON, fieldsToReveal: JSON? = nil, verifierPublicIdentityKey: String) async -> JSON {
   // Default values enforced by overloading constructor
-  public class ProveCertificate extends CallBaseTypes implements Serializable {
+  public class ProveCertificate extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1510,14 +1512,14 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"fieldsToReveal\":\"" + checkForJSONErrorAndReturnToApp(fieldsToReveal, "proveCertificate", "fieldsToReveal") + "\",";
       paramStr += "\"verifierPublicIdentityKey\":\"" + verifierPublicIdentityKey + "\"";
     }
-    public String caller() {
+    // Dummy methods to allow instantiation of Abstract class
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"proveCertificate\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_PROVE_CERT", "called():returnResult:" + returnResult);
@@ -1559,7 +1561,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   //   public func submitDirectTransaction(protocolID: String, transaction: JSON, senderIdentityKey: String, note: String, amount: Int, derivationPrefix: String? = nil) async -> JSON {
-  public class SubmitDirectTransaction extends CallBaseTypes implements Serializable {
+  public class SubmitDirectTransaction extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1583,14 +1585,14 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"amount\":\"" + amount + "\",";
       paramStr += "\"derivationPrefix\":\"" + derivationPrefix + "\"";
     }
-    public String caller() {
+    // Dummy methods to allow instantiation of Abstract class
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"submitDirectTransaction\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_SUBMIT_DIRECT_TX", "called():returnResult:" + returnResult);
@@ -1637,7 +1639,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func getPublicKey(protocolID: JSON?, keyID: String? = nil, privileged: Bool? = nil, identityKey: Bool? = nil, reason: String? = nil, counterparty: String? = "self", description: String? = nil) async -> String {
-   public class GetPublicKey extends CallBaseTypes implements Serializable {
+   public class GetPublicKey extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1714,7 +1716,8 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"description\":\"" + description + "\"";
       Log.i("D_SDK_GET_PUBLIC_KEY", "GetPublicKey():paramStr=" + paramStr);
     }
-    public String caller() {
+    // Dummy methods to allow instantiation of Abstract class
+    public void caller() {
       Log.i("D_SDK_GET_PUBLIC_KEY", "caller()");
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
@@ -1723,7 +1726,6 @@ public class SDKActivity extends AppCompatActivity {
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
       Log.i("D_SDK_GET_PUBLIC_KEY", "caller():cmdJSONString=" + cmdJSONString);
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_GET_PUBLIC_KEY", "called()::returnResult:" + returnResult);
@@ -1769,10 +1771,8 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func getVersion() async -> String {
-  public class GetVersion extends CallBaseTypes implements Serializable {
-
-    public String caller() {
-      return "{\"type\":\"CWI\",\"call\":\"getVersion\",\"params\":{},\"id\":\"uuid\"}";
+  public class GetVersion extends CallTypes implements Serializable {
+    public void caller() {
     }
     public void called(String returnResult) {
       Log.i("D_SDK_GET_VERSION", "called():returnResult:" + returnResult);
@@ -1812,7 +1812,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func createPushDropScript(fields: JSON, protocolID: String, keyID: String) async -> String {
-  public class CreatePushDropScript extends CallBaseTypes implements Serializable {
+  public class CreatePushDropScript extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1824,14 +1824,14 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"protocolID\":\"" + protocolID + "\",";
       paramStr += "\"keyID\":\"" + keyID + "\"";
     }
-    public String caller() {
+    // Dummy methods to allow instantiation of Abstract class
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createPushDropScript\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_CREATE_PUSH_DROP", "called():returnResult:" + returnResult);
@@ -1871,7 +1871,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func parapetRequest(resolvers: JSON, bridge: String, type: String, query: JSON) async -> JSON {
-  public class ParapetRequest extends CallBaseTypes implements Serializable {
+  public class ParapetRequest extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1884,15 +1884,14 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"type\":\"" + type + "\",";
       paramStr += "\"query\":\"" + checkForJSONErrorAndReturnToApp(query, "parapetRequest", "query") + "\"";
     }
-    public String caller() {
+     public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"parapetRequest\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
-    }
+     }
     public void called(String returnResult) {
       Log.i("D_SDK_PARA_REQUEST", "called():returnResult:" + returnResult);
       try {
@@ -1937,7 +1936,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func downloadUHRPFile(url: String, bridgeportResolvers: JSON) async -> Data? {
-  public class DownloadUHRPFile extends CallBaseTypes implements Serializable {
+  public class DownloadUHRPFile extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -1948,14 +1947,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"url\":\"" + url + "\",";
       paramStr += "\"bridgeportResolvers\":\"" + checkForJSONErrorAndReturnToApp(bridgeportResolvers, "downloadUHRPFile", "bridgeportResolvers") + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"downloadUHRPFile\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_PARA_REQUEST", "called():returnResult:" + returnResult);
@@ -1995,7 +1993,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func newAuthriteRequest(params: JSON, requestUrl: String, fetchConfig: JSON) async -> JSON {
-  public class NewAuthriteRequest extends CallBaseTypes implements Serializable {
+  public class NewAuthriteRequest extends CallTypes implements Serializable {
 
     private String paramStr = "";
 
@@ -2008,14 +2006,13 @@ public class SDKActivity extends AppCompatActivity {
       paramStr += "\"requestUrl\":\"" + requestUrl + "\",";
       paramStr += "\"fetchConfig\":\"" + checkForJSONErrorAndReturnToApp(fetchConfig, "newAuthriteRequest", "fetchConfig") + "\"";
     }
-    public String caller() {
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"newAuthriteRequest\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_NEW_AUTHRITE", "called():returnResult:" + returnResult);
@@ -2052,7 +2049,7 @@ public class SDKActivity extends AppCompatActivity {
   }
   */
   // public func createOutputScriptFromPubKey(derivedPublicKey: String) async -> String {
-  public class CreateOutputScriptFromPubKey extends CallBaseTypes implements Serializable {
+  public class CreateOutputScriptFromPubKey extends CallTypes implements Serializable {
     private String paramStr = "";
 
     // Required for polymorphism
@@ -2061,14 +2058,14 @@ public class SDKActivity extends AppCompatActivity {
     public CreateOutputScriptFromPubKey(String derivedPublicKey) {
       paramStr = "\"derivedPublicKey\":\"" + derivedPublicKey + "\"";
     }
-    public String caller() {
+    // Dummy methods to allow instantiation of Abstract class
+    public void caller() {
       String cmdJSONString = "{";
       cmdJSONString += "\"type\":\"CWI\",";
       cmdJSONString += "\"call\":\"createOutputScriptFromPubKey\",";
       cmdJSONString += "\"params\":{" + paramStr + "},";
       cmdJSONString += "\"id\":\"uuid\"";
       cmdJSONString += "}";
-      return cmdJSONString;
     }
     public void called(String returnResult) {
       Log.i("D_SDK_CREATE_OUTPUT_SCRIPT", "called():returnResult:" + returnResult);
@@ -2190,9 +2187,18 @@ public class SDKActivity extends AppCompatActivity {
   }
 
   // Generic 'run' command
+
+  public void runCommand(String s) {
+    Log.i("D_SDK", ">runCommand():s:" + s);
+    s = "window.postMessage(" + s + ")";
+    Log.i("D_SDK", " runCommand():s:" + s);
+    doJavaScript(webview, s);
+    Log.i("D_SDK", "<runCommand()");
+  }
+  /*
   public void runCommand(CallBaseTypes type, String uuid, String actualType, String portal) {
     Log.i("D_SDK", ">runCommand():type:" + type + ",uuid=" + uuid + ",actualType=" + actualType + ",portal=" + portal);
-    callTypes.update(type, actualType, portal);
+    //callTypes.update(type, actualType, portal);
     String s = "window.postMessage(" + callTypes.caller().replace("uuid", uuid) + ")";
     Log.i("D_SDK", " runCommand():s=" + s);
     doJavaScript(
@@ -2201,6 +2207,7 @@ public class SDKActivity extends AppCompatActivity {
     );
     Log.i("D_SDK", "<runCommand()");
   }
+  */
 
   // Convert the string to base64 so it can be passed over the net
   public static String convertStringToBase64(String str) {
@@ -2337,7 +2344,7 @@ public class SDKActivity extends AppCompatActivity {
       Log.i("D_SDK", " onCreate():display App");
       finish();
     }
-    callTypes = new CallTypes();
+    //callTypes = new CallTypes();
     setContentView(R.layout.activity_sdk);
     webview = findViewById(R.id.web_html);
     webview.setWebChromeClient (
@@ -2403,14 +2410,14 @@ public class SDKActivity extends AppCompatActivity {
                   Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():classNames.length=" + classNames.length + ",classNames=" + classNames);
                   type[0] = classNames[3].substring(0, 1).toLowerCase() + classNames[3].substring(1);
                   Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():type[0]=" + type[0]);
-                  String s = "window.postMessage(" + instance.caller().replace("uuid", UUID.randomUUID().toString()) + ")";
+                  String s = "window.postMessage(" + instance.get().replace("uuid", UUID.randomUUID().toString()) + ")";
                   Log.i("D_SDK_WAITING", " onPageFinished():s=" + s);
                   doJavaScript(webview, s);
                   Log.i("D_SDK_WAITING", " onPageFinished():called runCommand():type=" + type[0]);
                   String waitingInstanceStr = intent.getStringExtra("waitingNextInstance");
                   if (waitingInstanceStr != null) {
                     Log.i("D_SDK", " onCreate():waitingNextInstance is not null");
-                    CallBaseTypes waitingInstance = (CallBaseTypes) getInstance(waitingInstanceStr);
+                    CallTypes waitingInstance = (CallTypes) getInstance(waitingInstanceStr);
                     Log.i("D_SDK_WAITING", " onPageFinished():call runCommand():waitingInstance=" + waitingInstance);
                     Log.i("D_SDK", " onPageFinished():waitingInstance before waitingCallType=" + waitingCallType);
                     waitingCallType.push(waitingInstance);
@@ -2424,13 +2431,13 @@ public class SDKActivity extends AppCompatActivity {
                 uuid = intent.getStringExtra("uuid");
                 if(!type[0].equals("portal")) {
                   if (type[0].equals("waitForAuthentication")) {
-                    runCommand(new WaitForAuthentication(SDKActivity.this), uuid, type[0], portal);
+                    runCommand(new WaitForAuthentication(SDKActivity.this).get());
                   }
                   if (portal.equals("waitForAuthentication")) {
-                    runCommand(new WaitForAuthentication(SDKActivity.this), uuid, type[0], "");
+                    runCommand(new WaitForAuthentication(SDKActivity.this).get());
                   }
                   if (type[0].equals("isAuthenticated")) {
-                    runCommand(new IsAuthenticated(SDKActivity.this), uuid, type[0], portal);
+                    runCommand(new IsAuthenticated(SDKActivity.this).get());
                   }
                   Log.i("D_SDK", " onPageFinished():created openBabbage=" + openBabbage);
                   if (!openBabbage) {
@@ -2439,13 +2446,13 @@ public class SDKActivity extends AppCompatActivity {
                 //} else {
                   Log.i("D_SDK", " onPageFinished():type=" + type[0]);
                   if (type[0].equals("encrypt")) {
-                    Encrypt encrypt = null;
+                    //CallTypes callTypes = null;
                     String counterparty = intent.getStringExtra("counterparty");
                     SDKActivity.counterparty = counterparty;
                     Log.i("D_SDK", " onPageFinished():encrypt:SDKActivity.counterparty=" + SDKActivity.counterparty);
                     if (counterparty == null) {
-                      encrypt =new Encrypt(SDKActivity.this);
-                      encrypt.process(
+                      callTypes =new Encrypt(SDKActivity.this);
+                      ((Encrypt) callTypes).process(
                               intent.getStringExtra("plaintext"),
                               intent.getStringExtra("protocolID"),
                               intent.getStringExtra("keyID")
@@ -2453,8 +2460,8 @@ public class SDKActivity extends AppCompatActivity {
                     } else {
                       //03Sep2023-1402
                       //*** Added Experimental Test ***//
-                      encrypt =new Encrypt(SDKActivity.this);
-                      encrypt.process(
+                      callTypes =new Encrypt(SDKActivity.this);
+                      ((Encrypt) callTypes).process(
                               intent.getStringExtra("plaintext"),
                               intent.getStringExtra("protocolID"),
                               intent.getStringExtra("keyID"),
@@ -2462,7 +2469,8 @@ public class SDKActivity extends AppCompatActivity {
                       );
                     }
                     Log.i("D_SDK", " onPageFinished():encrypt before waitingCallType=" + waitingCallType);
-                    waitingCallType.push(encrypt);
+                    callTypes.caller();
+                    waitingCallType.push(callTypes);
                     Log.i("D_SDK", " onPageFinished():encrypt after waitingCallType=" + waitingCallType);
                     //03Sep2023-1402
                     //*** Added Experimental Test ***//
@@ -2700,14 +2708,18 @@ public class SDKActivity extends AppCompatActivity {
                   }
                   Log.i("D_SDK", " onPageFinished():before end point:waitingCallType.isEmpty()=" + waitingCallType.isEmpty());
                   if (type[0].equals("portal")) {
-                    if (!waitingCallType.isEmpty()) {
-                      babbageWaitingCallType.push(waitingCallType.get(0));
-                    }
-                    Log.i("D_SDK_BABBAGE_STACK", "onPageFinished():after push():babbageWaitingCallType=" + babbageWaitingCallType);
                     Log.i("D_SDK", "<onPageFinished():type=" + type[0]);
                     finish();
                   }
                 }
+                callTypes = new IsAuthenticated(SDKActivity.this);
+                callTypes.caller();
+                waitingCallType.push(callTypes);
+                // Need to start the child thread to call IsAuthenticated run command
+                WorkerThread workerThread = new WorkerThread();
+                workerThread.start();
+
+                /*
                 Log.i("D_SDK_STACK", " onPageFinished():waitingCallTypes:" + waitingCallType);
                 Log.i("D_SDK", " onPageFinished():before queue type=" + type[0]);
                 if (!type[0].equals("waitForAuthentication") && !type[0].equals("portal") && !portal.equals("waitForAuthentication")) {
@@ -2717,16 +2729,13 @@ public class SDKActivity extends AppCompatActivity {
                     //25Aug2023
                     //waitingCallType.push(waitingCallType.get(0));
                   } else {
-                    if (!waitingCallType.isEmpty()) {
-                      babbageWaitingCallType.push(waitingCallType.get(0));
-                    }
-                    Log.i("D_SDK_BABBAGE_STACK", "onPageFinished():after push():babbageWaitingCallType=" + babbageWaitingCallType);
                     waitingCallType.push(new IsAuthenticated(SDKActivity.this));
                   }
                   // Need to start the child thread to call IsAuthenticated run command
                   WorkerThread workerThread = new WorkerThread();
                   workerThread.start();
                 }
+                */
                 Log.i("D_SDK_STACK", " onPageFinished():waitingCallTypes:" + waitingCallType);
                 Log.i("D_SDK", "<onPageFinished():type=" + type[0]);
               }
@@ -2739,7 +2748,8 @@ public class SDKActivity extends AppCompatActivity {
               @Override
               public void handleMessage(Message msg) {
                 if (!waitingCallType.isEmpty() && msg.what == 1) {
-                  runCommand(waitingCallType.pop(), uuid, type[0], portal);
+                  callTypes = (CallTypes)waitingCallType.pop();
+                  runCommand(callTypes.get());
                 }
               }
             };

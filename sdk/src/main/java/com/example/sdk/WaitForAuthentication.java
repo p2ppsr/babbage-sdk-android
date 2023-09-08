@@ -7,7 +7,7 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 
-public class WaitForAuthentication extends SDKActivity.CallBaseTypes implements Serializable {
+public class WaitForAuthentication extends SDKActivity.CallTypes implements Serializable {
   private static SDKActivity activity = null;
 
   public WaitForAuthentication(SDKActivity activity) {
@@ -16,11 +16,10 @@ public class WaitForAuthentication extends SDKActivity.CallBaseTypes implements 
     Log.i("D_SDK_WAIT_FOR_AUTHED", "<WaitForAuthentication:constructor()");
   }
   static String result = "";
-  public String caller() {
-    Log.i("D_SDK_WAIT_FOR_AUTHED", ">WaitForAuthentication:caller()");
-    String s = "{\"type\":\"CWI\",\"call\":\"waitForAuthentication\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
-    Log.i("D_SDK_WAIT_FOR_AUTHED", "<WaitForAuthentication:caller():" + s);
-    return s;
+  public void caller() {
+    Log.i("D_SDK_WAIT_FOR_AUTHED", "<>WaitForAuthentication:caller()");
+    super.caller("waitForAuthentication");
+    //String s = "{\"type\":\"CWI\",\"call\":\"waitForAuthentication\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
   }
 
   public void called(String returnResult) {

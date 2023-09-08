@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 
-public class IsAuthenticated extends SDKActivity.CallBaseTypes implements Serializable {
+public class IsAuthenticated extends SDKActivity.CallTypes implements Serializable {
   private static SDKActivity activity = null;
   private static String waitingTypeInstance = "";
 
@@ -18,9 +18,9 @@ public class IsAuthenticated extends SDKActivity.CallBaseTypes implements Serial
     IsAuthenticated.activity = activity;
     Log.i("D_SDK_IS_AUTH", "<IsAuthenticated:constructor()");
   }
-  public String caller() {
+  public void caller() {
     Log.i("D_SDK_IS_AUTH", "<>IsAuthenticated:caller()");
-    return "{\"type\":\"CWI\",\"call\":\"isAuthenticated\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
+    super.caller("isAuthenticated");
   }
   public void called(String returnResult) {
     Log.i("D_SDK_IS_AUTH", ">IsAuthenticated:called():returnResult:" + returnResult);
@@ -36,7 +36,7 @@ public class IsAuthenticated extends SDKActivity.CallBaseTypes implements Serial
       Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():activity.waitingCallType=" + activity.waitingCallType);
       //03Sep2023
       /*** set experimental */
-      result = "false";
+      //result = "false";
       if (result.equals("true") && !activity.waitingCallType.isEmpty()) {
         // Need to start the child thread to call the waiting run command
         Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():activity.waitingCallType=" + activity.waitingCallType);

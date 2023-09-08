@@ -8,7 +8,7 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 
-public class Encrypt extends SDKActivity.CallBaseTypes implements Serializable {
+public class Encrypt extends SDKActivity.CallTypes implements Serializable {
   private static String  uuid = "";
   private static String  result = "";
   private String paramStr = "";
@@ -20,12 +20,7 @@ public class Encrypt extends SDKActivity.CallBaseTypes implements Serializable {
 
   // Default values enforced by overloading constructor
   public void process(String plaintext, String protocolID, String keyID) {
-    paramStr = "";
-    paramStr += "\"plaintext\":\"" + SDKActivity.convertStringToBase64(plaintext) + "\",";
-    paramStr += "\"protocolID\":\"" + protocolID + "\",";
-    paramStr += "\"keyID\":\"" + keyID + "\"";
-    paramStr += "\"counterparty\":\"self\",";
-    paramStr += "\"returnType\":\"string\"";
+    process(plaintext, protocolID, keyID, "self");
   }
   public void process(String plaintext, String protocolID, String keyID, String counterparty) {
     Log.i("D_SDK_ENCRYPT", "Encrypt():plaintext=" + plaintext);
@@ -37,16 +32,8 @@ public class Encrypt extends SDKActivity.CallBaseTypes implements Serializable {
     paramStr += "\"counterparty\":\"" + counterparty + "\",";
     paramStr += "\"returnType\":\"string\"";
   }
-  public String caller() {
-    String cmdJSONString = "{";
-    cmdJSONString += "\"type\":\"CWI\",";
-    cmdJSONString += "\"call\":\"encrypt\",";
-    cmdJSONString += "\"params\":{" + paramStr;
-    cmdJSONString += "},";
-    cmdJSONString += "\"originator\":\"projectbabbage.com\",";
-    cmdJSONString += "\"id\":\"uuid\"";
-    cmdJSONString += "}";
-    return cmdJSONString;
+  public void caller() {
+    super.caller("encrypt", paramStr);
   }
   public void called(String returnResult) {
     Log.i("D_SDK_ENCRYPT", "called():returnResult:" + returnResult);
