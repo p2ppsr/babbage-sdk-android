@@ -9,20 +9,16 @@ import org.json.JSONObject;
 import java.io.Serializable;
 
 public class Encrypt extends SDKActivity.CallTypes implements Serializable {
-  private static String  uuid = "";
-  private static String  result = "";
-  private String paramStr = "";
-  private static SDKActivity activity = null;
   // Required for polymorphism
-  public Encrypt(SDKActivity activity) {
-    Encrypt.activity = activity;
+  protected Encrypt(SDKActivity activity) {
+    Log.i("D_SDK_ENCRYPT", "<>Encrypt():");
+    SDKActivity.CallTypes.activity = activity;
   }
-
   // Default values enforced by overloading constructor
-  public void process(String plaintext, String protocolID, String keyID) {
+  protected void process(String plaintext, String protocolID, String keyID) {
     process(plaintext, protocolID, keyID, "self");
   }
-  public void process(String plaintext, String protocolID, String keyID, String counterparty) {
+  protected void process(String plaintext, String protocolID, String keyID, String counterparty) {
     //Log.i("D_SDK_ENCRYPT", "Encrypt():plaintext=" + plaintext);
     //Log.i("D_SDK_ENCRYPT", "Encrypt():base64 plaintext=" + SDKActivity.convertStringToBase64(plaintext));
     paramStr = "";
@@ -32,11 +28,11 @@ public class Encrypt extends SDKActivity.CallTypes implements Serializable {
     paramStr += "\"counterparty\":\"" + counterparty + "\",";
     paramStr += "\"returnType\":\"string\"";
   }
-  public void caller() {
+  protected void caller() {
     super.caller("encrypt", paramStr);
   }
-  public void called(String returnResult) {
-    //Log.i("D_SDK_ENCRYPT", "called():returnResult:" + returnResult);
+  protected void called(String returnResult) {
+    Log.i("D_SDK_ENCRYPT", ">Encrypt:called():returnResult:" + returnResult);
     try {
       //Log.i("D_SDK_ENCRYPT", "called():1");
       JSONObject jsonReturnResultObject = new JSONObject(returnResult);
@@ -44,10 +40,11 @@ public class Encrypt extends SDKActivity.CallTypes implements Serializable {
       uuid = jsonReturnResultObject.get("uuid").toString();
       //Log.i("D_SDK_ENCRYPT", "called():3");
       result = jsonReturnResultObject.get("result").toString();
-      activity.returnUsingIntent("encrypt", result);
+      activity.returnUsingIntent("encrypt", uuid, result);
     } catch (JSONException e) {
       Log.e("D_SDK_ENCRYPT", "JSON:ERROR:e=" + e);
-      activity.returnUsingIntent("encrypt", result);
+      activity.returnUsingIntent("encrypt", uuid, result);
     }
+    Log.i("D_SDK_ENCRYPT", "<Encrypt:called()");
   }
 }

@@ -10,20 +10,19 @@ import org.json.JSONObject;
 import java.io.Serializable;
 
 public class IsAuthenticated extends SDKActivity.CallTypes implements Serializable {
-  private static SDKActivity activity = null;
-  private static String waitingTypeInstance = "";
-  public IsAuthenticated(SDKActivity activity) {
+  protected IsAuthenticated(SDKActivity activity) {
     //Log.i("D_SDK_IS_AUTH", ">IsAuthenticated:constructor()");
-    IsAuthenticated.activity = activity;
+    SDKActivity.CallTypes.activity = activity;
     //Log.i("D_SDK_IS_AUTH", "<IsAuthenticated:constructor()");
   }
-  public void caller() {
+  protected void caller() {
     //Log.i("D_SDK_IS_AUTH", "<>IsAuthenticated:caller()");
     super.caller("isAuthenticated");
   }
-  public void called(String returnResult) {
-    //Log.i("D_SDK_IS_AUTH", ">IsAuthenticated:called():returnResult:" + returnResult);
+  protected void called(String returnResult) {
+    Log.i("D_SDK_IS_AUTH", ">IsAuthenticated:called():returnResult:" + returnResult);
     String result = "";
+    String callTypeStr = "";
     try {
       returnResult = returnResult.replaceAll(":true,", ":\"true\",");
       returnResult = returnResult.replaceAll(":false,", ":\"false\",");
@@ -35,28 +34,36 @@ public class IsAuthenticated extends SDKActivity.CallTypes implements Serializab
       //Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():activity.waitingCallType=" + activity.waitingCallType);
       //03Sep2023
       /*** set experimental */
-      result = "false";
-      if (result.equals("true") && !activity.waitingCallType.isEmpty()) {
+      //result = experimentalResult;
+      Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():returnResult:" + result);
+      Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():activity.nextCallTypes.get()=" + activity.nextCallTypes.get());
+      if (result.equals("true") && activity.nextCallTypes != null) {
+      //if (result.equals("true") && !activity.waitingCallType.isEmpty()) {
         // Need to start the child thread to call the waiting run command
         //Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():activity.waitingCallType=" + activity.waitingCallType);
-        SDKActivity.WorkerThread workerThread = new SDKActivity.WorkerThread();
-        workerThread.start();
+        //09Sep2023-2307
+        Log.i("D_SDK_IS_AUTH", "  IsAuthenticated:called():call runCommand()" + activity.nextCallTypes.get());
+        /*** 10Sep2023-1851 ***/
+        //activity.runCommand(activity.nextCallTypes.get());
+        callTypeStr = SDKActivity.setInstance(activity.nextCallTypes);
+        activity.returnUsingWaitingIntent(callTypeStr, uuid,"");
       } else {
-        //Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():EXPERIMENT set return to false");
+        Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():EXPERIMENT set return to false");
         //Log.i("D_SDK_AUTH", " IsAuthenticated:called():after result:" + result);
         if (result.equals("false")) {
           //Log.i("D_SDK_IS_AUTH", " IsAuthenticated:called():return:false to App");
           activity.callTypes = new WaitForAuthentication(activity);
           activity.callTypes.caller();
-          waitingTypeInstance = SDKActivity.setInstance(activity.callTypes);
-          if (!activity.waitingCallType.isEmpty()) {
-            activity.returnUsingWaitingIntent(waitingTypeInstance, SDKActivity.setInstance(activity.waitingCallType.get(0)), "openBabbage");
+          callTypeStr = SDKActivity.setInstance(activity.callTypes);
+          if (activity.nextCallTypes != null) {
+            activity.returnUsingWaitingIntent(callTypeStr, SDKActivity.setInstance(activity.nextCallTypes), uuid,  "openBabbage");
           }
         }
       }
     } catch (JSONException e) {
-      activity.returnUsingWaitingIntent(waitingTypeInstance, "openBabbage");
+      Log.e("D_SDK_IS_AUTH", "JSON:ERROR:e=" + e);
+      activity.returnUsingWaitingIntent(callTypeStr, uuid,"");
     }
-    //Log.i("D_SDK_IS_AUTH", "<IsAuthenticated:called()");
+    Log.i("D_SDK_IS_AUTH", "<IsAuthenticated:called()");
   }
 }

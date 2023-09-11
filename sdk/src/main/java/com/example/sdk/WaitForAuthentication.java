@@ -8,28 +8,21 @@ import org.json.JSONObject;
 import java.io.Serializable;
 
 public class WaitForAuthentication extends SDKActivity.CallTypes implements Serializable {
-  private static SDKActivity activity = null;
-
-  public WaitForAuthentication(SDKActivity activity) {
+  protected WaitForAuthentication(SDKActivity activity) {
     //Log.i("D_SDK_WAIT_FOR_AUTHED", ">WaitForAuthentication:constructor()");
-    WaitForAuthentication.activity = activity;
+    SDKActivity.CallTypes.activity = activity;
     //Log.i("D_SDK_WAIT_FOR_AUTHED", "<WaitForAuthentication:constructor()");
   }
-  static String result = "";
   public void caller() {
     //Log.i("D_SDK_WAIT_FOR_AUTHED", "<>WaitForAuthentication:caller()");
     super.caller("waitForAuthentication");
-    ////String s = "{\"type\":\"CWI\",\"call\":\"waitForAuthentication\",\"params\":{},\"originator\":\"projectbabbage.com\",\"id\":\"uuid\"}";
   }
 
   public void called(String returnResult) {
-    //Log.i("D_SDK_WAIT_FOR_AUTHED", ">WaitForAuthentication:called()");
-    if (!activity.waitingCallType.isEmpty()) {
-      // Need to start the child thread to call the waiting run command
-      //Log.i("D_SDK_WAIT_FOR_AUTHED", " WaitForAuthentication:called():activity.waitingCallType=" + activity.waitingCallType);
-      SDKActivity.WorkerThread workerThread = new SDKActivity.WorkerThread();
-      workerThread.start();
-    }
+    Log.i("D_SDK_WAIT_FOR_AUTHED", ">WaitForAuthentication:called():returnResult=" + returnResult);
+    Log.i("D_SDK_WAIT_FOR_AUTHED", " WaitForAuthentication:called():1 activity.waitingCallType=" + activity.waitingCallType);
+    String callTypeStr = "";
+    experimentalResult = "true";
     try {
       //Log.i("D_SDK_WAIT_FOR_AUTHED", " WaitForAuthentication:called():1");
       JSONObject jsonReturnResultObject = new JSONObject(returnResult);
@@ -37,13 +30,22 @@ public class WaitForAuthentication extends SDKActivity.CallTypes implements Seri
       //String uuid = jsonReturnResultObject.get("uuid").toString();
       Log.i("D_SDK_WAIT_FOR_AUTHED", " WaitForAuthentication:called():3");
       result = jsonReturnResultObject.get("result").toString();
+      uuid = jsonReturnResultObject.get("uuid").toString();
+      Log.i("D_SDK_WAIT_FOR_AUTHED", " WaitForAuthentication:called():result=" + result);
       if (result.equals("true")) {
-        activity.returnUsingIntent("waitForAuthentication", result);
+        if (activity.nextCallTypes != null) {
+          // return next type to be called
+          callTypeStr = SDKActivity.setInstance(activity.nextCallTypes);
+          activity.returnUsingWaitingIntent(callTypeStr, uuid, "");
+        }
+      } else {
+        // return result
+        activity.returnUsingIntent("waitForAuthentication", uuid, result);
       }
     } catch (JSONException e) {
-      Log.e("D_SDK_ENCRYPT", "JSON:ERROR:e=" + e);
-      activity.returnUsingIntent("encrypt", result);
+      Log.e("D_SDK_WAIT_FOR_AUTHED", "JSON:ERROR:e=" + e);
+      activity.returnUsingIntent("waitForAuthentication", uuid, result);
     }
-    //Log.i("D_SDK_WAIT_FOR_AUTHED", "<WaitForAuthentication:called()");
+    Log.i("D_SDK_WAIT_FOR_AUTHED", "<WaitForAuthentication:called()");
   }
 }
